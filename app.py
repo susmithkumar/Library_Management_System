@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_mysqldb import MySQL
 import MySQLdb.cursors  # Needed for working with MySQL cursors
 import os
+import re
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
@@ -10,7 +11,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'  # Replace with your MySQL user
 app.config['MYSQL_PASSWORD'] = 'W7301@jqir#'  # Replace with your MySQL password
-app.config['MYSQL_DB'] = '`library_management_system`'
+app.config['MYSQL_DB'] = 'library_management_system'
 
 # Initialize MySQL
 mysql = MySQL(app)
@@ -23,27 +24,32 @@ def home():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
+    mesage = ''
+    if request.method == 'POST' and 'email' in request.form and 'password' in request.form:
+        email = request.form['email']
         password = request.form['password']
-
-        # MySQL query to verify user credentials
-        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cur.execute('SELECT * FROM user_table WHERE user_name = %s AND Password = %s', (username, password))
-        user = cur.fetchone()
-
+        print(email,password)
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM user_table WHERE email = % s AND password = % s', (email, password, ))
+        user = cursor.fetchone()
+        print(user)
         if user:
-            session['username'] = user['username']  # Store username in session
+            session['loggedin'] = True
+            session['userid'] = user['id']
+            session['name'] = user['first_name']
+            session['email'] = user['email']
+            session['role'] = user['role']
+            mesage = 'Logged in successfully !'
             return redirect(url_for('dashboard'))
         else:
-            flash('Invalid credentials. Please try again.')
+            mesage = 'Please enter correct email / password !'
+    return render_template('login.html', mesage = mesage)
 
-    return render_template('login.html')
 
-@app.route('/dashboard')
+@app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
-    if 'username' in session:
-        return f'Welcome {session["username"]}! This is the dashboard.'
+    if 'loggedin' in session:
+        return render_template("dashboard.html")
     return redirect(url_for('login'))
 
 @app.route('/logout')
@@ -51,6 +57,30 @@ def logout():
     session.pop('username', None)
     flash('You have been logged out.')
     return redirect(url_for('login'))
+
+@app.route('/register', methods =['GET', 'POST'])
+def register():
+    mesage = ''
+    if request.method == 'POST' and 'name' in request.form and 'password' in request.form and 'email' in request.form :
+        userName = request.form['name']
+        password = request.form['password']
+        email = request.form['email']
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM user_table WHERE email = % s', (email, ))
+        account = cursor.fetchone()
+        if account:
+            mesage = 'Account already exists !'
+        elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
+            mesage = 'Invalid email address !'
+        elif not userName or not password or not email:
+            mesage = 'Please fill out the form !'
+        else:
+            cursor.execute('INSERT INTO user_table (first_name, email, password) VALUES (%s, %s, %s)', (userName, email, password))
+            mysql.connection.commit()
+            mesage = 'You have successfully registered !'
+    elif request.method == 'POST':
+        mesage = 'Please fill out the form !'
+    return render_template('register.html', mesage = mesage)
 
 if __name__ == '__main__':
     app.run(debug=True)
