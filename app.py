@@ -3,6 +3,7 @@ from flask_mysqldb import MySQL
 import MySQLdb.cursors  # Needed for working with MySQL cursors
 import os
 import re
+import bcrypt
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
@@ -27,13 +28,13 @@ def login():
     mesage = ''
     if request.method == 'POST' and 'email' in request.form and 'password' in request.form:
         email = request.form['email']
-        password = request.form['password']
+        password = request.form['password'].encode('utf-8')
         print(email,password)
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM user_table WHERE email = % s AND password = % s', (email, password, ))
+        cursor.execute('SELECT * FROM user_table WHERE email = % s', (email,))
         user = cursor.fetchone()
         print(user)
-        if user:
+        if user and bcrypt.checkpw(password, user['password'].encode('utf-8')):
             session['loggedin'] = True
             session['userid'] = user['id']
             session['name'] = user['first_name']
@@ -54,6 +55,7 @@ def dashboard():
 
 @app.route('/logout')
 def logout():
+    session.clear()
     session.pop('username', None)
     flash('You have been logged out.')
     return redirect(url_for('login'))
@@ -64,6 +66,7 @@ def register():
     if request.method == 'POST' and 'name' in request.form and 'password' in request.form and 'email' in request.form :
         userName = request.form['name']
         password = request.form['password']
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         email = request.form['email']
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM user_table WHERE email = % s', (email, ))
@@ -75,7 +78,7 @@ def register():
         elif not userName or not password or not email:
             mesage = 'Please fill out the form !'
         else:
-            cursor.execute('INSERT INTO user_table (first_name, email, password) VALUES (%s, %s, %s)', (userName, email, password))
+            cursor.execute('INSERT INTO user_table (first_name, email, password) VALUES (%s, %s, %s)', (userName, email, hashed_password))
             mysql.connection.commit()
             mesage = 'You have successfully registered !'
     elif request.method == 'POST':

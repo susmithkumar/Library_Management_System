@@ -9,9 +9,9 @@
             </li>
         </ul>
         <ul class="navbar-nav ml-auto">
-            {% if session.get('loggedin')%}
+            {% if session['loggedin']%}
                 <li class="nav-item">
-                    <a class="nav-link" href="#">{{session.get(name)}} </a> |
+                    <a class="nav-link" href="#">{{session['name']}} </a> |
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('logout') }}"> Logout</a>
