@@ -46,7 +46,6 @@ def login():
             mesage = 'Please enter correct email / password !'
     return render_template('login.html', mesage = mesage)
 
-
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
     if 'loggedin' in session:
@@ -84,6 +83,27 @@ def register():
     elif request.method == 'POST':
         mesage = 'Please fill out the form !'
     return render_template('register.html', mesage = mesage)
+
+# Add Book Route
+@app.route('/add_book', methods=['GET', 'POST'])
+def add_book():
+    if 'loggedin' in session:  # Ensure the user is logged in
+        if request.method == 'POST':
+            title = request.form['title']
+            author = request.form['author']
+            isbn = request.form['isbn']
+            quantity = request.form['quantity']
+
+            # Insert book data into the database
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('INSERT INTO books (title, author, isbn, quantity) VALUES (%s, %s, %s, %s)',
+                           (title, author, isbn, quantity))
+            mysql.connection.commit()
+            flash('Book added successfully!')
+            return redirect(url_for('dashboard'))
+
+        return render_template('add_book.html')
+    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     app.run(debug=True)
