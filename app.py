@@ -68,6 +68,16 @@ def register():
         password = request.form['password']
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         email = request.form['email']
+        role = request.form['role']
+        address = request.form['address']
+        #chnages vinod
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT MAX(sno) FROM users")  # Get the latest `sno`
+        result = cursor.fetchone()
+        sno = result[0] + 1 if result[0] else 1  # Increment the `sno` for the new user
+        # Combine `sno` and `first name` to create the `userid`
+        userid = f"{userName.lower()}{sno}"
+        #completed my changes
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM user_table WHERE email = % s', (email, ))
         account = cursor.fetchone()
@@ -78,7 +88,7 @@ def register():
         elif not userName or not password or not email:
             mesage = 'Please fill out the form !'
         else:
-            cursor.execute('INSERT INTO user_table (first_name, email, password) VALUES (%s, %s, %s)', (userName, email, hashed_password))
+            cursor.execute('INSERT INTO user_table (first_name, email, password, userid, address) VALUES (%s, %s, %s)', (userName, email, hashed_password, userid, address))#added by vinod userid, address
             mysql.connection.commit()
             mesage = 'You have successfully registered !'
     elif request.method == 'POST':
@@ -93,10 +103,58 @@ def users():
         users = cursor.fetchall()
         return render_template("users.html", users = users)
     return redirect(url_for('login'))
+#update the users vinod
+@app.route('/update_profile', methods=['GET', 'POST'])
+def update_profile():
+    if 'loggedin' in session:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        if request.method == 'POST' and 'name' in request.form and 'email' in request.form:
+            # Fetch updated details from the form
+            updated_name = request.form['name']
+            updated_email = request.form['email']
+            updated_address = request.form['address']
+            updated_role = request.form['role']
 
+            # Update only if valid email
+            if not re.match(r'[^@]+@[^@]+\.[^@]+', updated_email):
+                flash('Invalid email address!')
+            else:
+                # Update the user profile in the database
+                cursor.execute('UPDATE user_table SET first_name = %s, email = %s, address = %s, role = %s WHERE id = %s',
+                               (updated_name, updated_email, updated_address, updated_role, session['userid']))
+                mysql.connection.commit()
+                flash('Profile updated successfully!')
+                return redirect(url_for('dashboard'))
+
+        # GET request: Fetch current user data to pre-fill the form
+        cursor.execute('SELECT * FROM user_table WHERE id = %s', (session['userid'],))
+        user = cursor.fetchone()
+        return render_template('update_profile.html', user=user)
+    return redirect(url_for('login'))
+#vinod chnages done
 @app.route("/view_user", methods =['GET', 'POST'])
 def view_user():
+    ##new changes by vinod
     if 'loggedin' in session:
+        viewUserId = request.args.get('id') or session['userid']
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM user_table WHERE id = %s', (viewUserId,))
+        user = cursor.fetchone()
+        
+        # Debugging statements
+        if not user:
+            print("User not found in the database")
+        else:
+            print(f"User fetched: {user}")
+
+        if user:
+            return render_template("view_user.html", user=user)
+        else:
+            flash('User not found')
+            return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
+#changes completed by vinod
+'''if 'loggedin' in session:
         viewUserId = request.args.get('id')
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         print(viewUserId)
@@ -105,7 +163,8 @@ def view_user():
         user = cursor.fetchone()
         print(user)
         return render_template("view_user.html", user = user)
-    return redirect(url_for('login'))
+    return redirect(url_for('login'))'''
+  
 
 if __name__ == '__main__':
     app.run(debug=True)
