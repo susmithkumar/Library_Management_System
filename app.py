@@ -109,6 +109,179 @@ def view_user():
     return redirect(url_for('login'))
 
 
+@app.route('/add_role', methods=['GET', 'POST'])
+def add_role():
+    mesage = ''
+    if request.method == 'POST' and 'role' in request.form and 'description' in request.form:
+        role_name = request.form.get('role')
+        role_description = request.form.get('description')
+
+        # Check if the role name is empty
+        if not role_name:
+            mesage = 'Role name is required!'
+            return render_template('add_role.html', mesage=mesage)
+
+        # Connect to the database
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        # Check if the roles table exists and create it if it doesn't
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS roles (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL UNIQUE,
+                description TEXT
+            );
+        """)
+        mysql.connection.commit()
+        print("Table successfully created (if it didn't exist).")
+
+        # Check if the role already exists
+        cursor.execute('SELECT * FROM roles WHERE name = %s', (role_name,))
+        role = cursor.fetchone()
+
+        if role:
+            mesage = 'Role already exists!'
+        else:
+            # Insert the new role
+            cursor.execute('INSERT INTO roles (name, description) VALUES (%s, %s)', (role_name, role_description))
+            mysql.connection.commit()
+            mesage = 'Role created successfully!'
+
+        # Close the cursor after usage
+        cursor.close()
+
+    elif request.method == 'POST':
+        mesage = 'Please fill out the form!'
+
+    # Render the form with a success or error message
+    return render_template('add_role.html', mesage=mesage)
+
+
+@app.route('/edit_role/<int:role_id>', methods=['GET', 'POST'])
+def edit_role(role_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    # Handle GET request (Display edit form)
+    if request.method == 'GET':
+        cursor.execute('SELECT * FROM roles WHERE id = %s', (role_id,))
+        role = cursor.fetchone()
+        if not role:
+            mesage ='Role not found!'
+            return redirect(url_for('roles'))
+        return render_template('edit_role.html', role=role)
+
+    # Handle POST request (Update the role)
+    if request.method == 'POST':
+        role_name = request.form['name']
+        role_description = request.form['description']
+
+        if not role_name or not role_description:
+            mesage ='Please fill in all fields!'
+            return redirect(url_for('edit_role', role_id=role_id))
+
+        # Update the role details in the database
+        cursor.execute('UPDATE roles SET name = %s, description = %s WHERE id = %s',
+                       (role_name, role_description, role_id))
+        mysql.connection.commit()
+        mesage ='Role updated successfully!'
+        return redirect(url_for('roles'))
+
+@app.route('/roles', methods=['GET'])
+def roles():
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('SELECT * FROM roles')
+    roles = cursor.fetchall()
+    return render_template('roles.html', role=roles)
+
+
+@app.route('/add_responsibility', methods=['GET', 'POST'])
+def add_responsibility():
+    mesage = ''
+    if request.method == 'POST' and 'responsibility' in request.form and 'description' in request.form and 'path' in request.form:
+        responsibility_name = request.form.get('responsibility')
+        responsibility_description = request.form.get('description')
+        responsibility_path = request.form.get('path')
+
+        # Check if the responsibility name is empty
+        if not responsibility_name:
+            mesage = 'Responsibility name is required!'
+            return render_template('add_responsibility.html', mesage=mesage)
+
+        # Connect to the database
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        # Check if the responsibilities table exists and create it if it doesn't
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS responsibilities (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL UNIQUE,
+                description TEXT,
+                path VARCHAR(255)
+            );
+        """)
+        mysql.connection.commit()
+        print("Table successfully created (if it didn't exist).")
+
+        # Check if the responsibility already exists
+        cursor.execute('SELECT * FROM responsibilities WHERE name = %s', (responsibility_name,))
+        responsibility = cursor.fetchone()
+
+        if responsibility:
+            mesage = 'Responsibility already exists!'
+        else:
+            # Insert the new responsibility with the path
+            cursor.execute('INSERT INTO responsibilities (name, description, path) VALUES (%s, %s, %s)',
+                           (responsibility_name, responsibility_description, responsibility_path))
+            mysql.connection.commit()
+            mesage = 'Responsibility created successfully!'
+
+        # Close the cursor after usage
+        cursor.close()
+
+    elif request.method == 'POST':
+        mesage = 'Please fill out the form!'
+
+    # Render the form with a success or error message
+    return render_template('add_responsibility.html', mesage=mesage)
+
+
+@app.route('/responsibility', methods=['GET'])
+def responsibility():
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('SELECT * FROM responsibilities')
+    responsibilities = cursor.fetchall()
+    cursor.close()
+    return render_template('responsibility.html', responsibility=responsibilities)
+
+@app.route('/edit_responsibility/<int:responsibility_id>', methods=['GET', 'POST'])
+def edit_responsibility(responsibility_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    # Handle GET request (Display the form with existing data)
+    if request.method == 'GET':
+        cursor.execute('SELECT * FROM responsibilities WHERE id = %s', (responsibility_id,))
+        responsibility = cursor.fetchone()
+        if not responsibility:
+            mesage ='Responsibility not found!'
+            return redirect(url_for('view_responsibilities'))
+        return render_template('edit_responsibility.html', responsibility=responsibility)
+
+    # Handle POST request (Update the responsibility in the database)
+    if request.method == 'POST':
+        responsibility_name = request.form['responsibility']
+        responsibility_description = request.form['description']
+        responsibility_path = request.form['path']
+
+        if not responsibility_name or not responsibility_description or not responsibility_path:
+            mesage ='Please fill in all fields!'
+            return redirect(url_for('edit_responsibility', responsibility_id=responsibility_id))
+
+        cursor.execute('UPDATE responsibilities SET name = %s, description = %s, path = %s WHERE id = %s',
+                       (responsibility_name, responsibility_description, responsibility_path, responsibility_id))
+        mysql.connection.commit()
+        cursor.close()
+        mesage ='Responsibility updated successfully!'
+        return redirect(url_for('responsibility'))
 
 if __name__ == '__main__':
     app.run(debug=True)
