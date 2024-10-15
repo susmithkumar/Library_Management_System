@@ -86,5 +86,29 @@ def register():
 
 
 
+@app.route("/users", methods =['GET', 'POST'])
+def users():
+    if 'loggedin' in session:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM user_table')
+        users = cursor.fetchall()
+        return render_template("users.html", users = users)
+    return redirect(url_for('login'))
+
+@app.route("/view_user", methods =['GET', 'POST'])
+def view_user():
+    if 'loggedin' in session:
+        viewUserId = request.args.get('id')
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        print(viewUserId)
+        print(session['user_id'])
+        cursor.execute('SELECT * FROM user_table WHERE id = % s', (session['user_id'], ))
+        user = cursor.fetchone()
+        print(user)
+        return render_template("view_user.html", user = user)
+    return redirect(url_for('login'))
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
