@@ -91,13 +91,24 @@ def add_book():
         if request.method == 'POST':
             title = request.form['title']
             author = request.form['author']
-            isbn = request.form['isbn']
+            rack = request.form['rack']
             quantity = request.form['quantity']
 
             # Insert book data into the database
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('INSERT INTO books (title, author, isbn, quantity) VALUES (%s, %s, %s, %s)',
-                           (title, author, isbn, quantity))
+            cursor.execute('INSERT INTO add_book (title, author, rack, quantity) VALUES (%s, %s, %s, %s)',
+                           (title, author, rack, quantity))
+            mysql.connection.commit()
+            # Get the ID of the newly inserted user
+            new_user_id = cursor.lastrowid
+
+            # Create user_code as 'BK' + new_user_id
+            user_code = f'BK{new_user_id}'
+
+            # Update the user_code column with the generated code
+            cursor.execute('UPDATE add_book SET isbn = %s WHERE id = %s', (user_code, new_user_id))
+            
+            # Commit the update
             mysql.connection.commit()
             flash('Book added successfully!')
             return redirect(url_for('dashboard'))
