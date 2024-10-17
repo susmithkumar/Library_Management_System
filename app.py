@@ -22,7 +22,7 @@ mysql = MySQL(app)
 
 @app.route('/')
 def home():
-    if 'username' in session:
+    if 'loggedin' in session:
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
@@ -33,16 +33,19 @@ def login():
     if request.method == 'POST' and 'email' in request.form and 'password' in request.form:
         email = request.form['email']
         password = request.form['password'].encode('utf-8')
-        print(email,password)
+        print("Executing query: SELECT * FROM user_table WHERE email = %s", (email,))
+
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM user_table WHERE email = % s', (email,))
+        cursor.execute('SELECT * FROM user_table WHERE email = %s', (email,))
         user = cursor.fetchone()
+
         if user and bcrypt.checkpw(password, user['password'].encode('utf-8')):
             session['loggedin'] = True
             session['user_id'] = user['id']
             session['name'] = user['first_name']
             session['email'] = user['email']
             session['role'] = user['role']
+
 
             # Fetch responsibilities (and paths) linked to the user's role
             cursor.execute("""
@@ -55,13 +58,15 @@ def login():
             # Store the responsibilities (menu links) in the session for use in the left menu
             session['responsibilities'] = cursor.fetchall()
             mesage = 'Logged in successfully !'
+
             return redirect(url_for('dashboard'))
         else:
-            mesage = 'Please enter correct email / password !'
-    return render_template('login.html', mesage = mesage)
+            mesage = 'Incorrect email or password!'
+    return render_template('login.html', mesage=mesage)
 
 
 @app.route('/dashboard', methods=['GET', 'POST'])
+
 def dashboard():
     if 'loggedin' in session:
         return render_template("dashboard.html")
@@ -73,47 +78,149 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('login'))
 
-@app.route('/register', methods =['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     mesage = ''
-    if request.method == 'POST' and 'name' in request.form and 'password' in request.form and 'email' in request.form :
+    if request.method == 'POST' and 'name' in request.form and 'password' in request.form and 'email' in request.form:
         userName = request.form['name']
         password = request.form['password']
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         email = request.form['email']
+        role = None
+        address = request.form['address']
+        last_name=request.form['last_name']
+
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM user_table WHERE email = % s', (email, ))
+        cursor.execute('SELECT * FROM user_table WHERE email = %s', (email,))
         account = cursor.fetchone()
+
         if account:
-            mesage = 'Account already exists !'
+            mesage = 'Account already exists!'
         elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
-            mesage = 'Invalid email address !'
+            mesage = 'Invalid email address!'
         elif not userName or not password or not email:
-            mesage = 'Please fill out the form !'
+            mesage = 'Please fill out the form!'
         else:
-            cursor.execute('INSERT INTO user_table (first_name, email, password) VALUES (%s, %s, %s)', (userName, email, hashed_password))
+            cursor.execute('INSERT INTO user_table (first_name, email, password,address, role,last_name) VALUES (%s, %s,%s, %s, %s, %s)', 
+                           (userName, email, hashed_password, address, role,last_name))
             mysql.connection.commit()
-            mesage = 'You have successfully registered !'
+            mesage = 'You have successfully registered!'
+
+            # Get the latest `sno` for unique userid generation
+            userid = cursor.lastrowid
+            sno = f'LB{userid}'
+            cursor.execute('UPDATE user_table SET userid = %s WHERE id = %s', (sno, userid))
+            mysql.connection.commit()
     elif request.method == 'POST':
-        mesage = 'Please fill out the form !'
-    return render_template('register.html', mesage = mesage)
+        mesage = 'Please fill out the form!'
+    return render_template('register.html', mesage=mesage)
+
 
 
 
 @app.route("/users", methods =['GET', 'POST'])
+
 def users():
     if 'loggedin' in session:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM user_table')
         users = cursor.fetchall()
-        return render_template("users.html", users = users)
+        return render_template("users.html", users=users)
+    return redirect(url_for('login'))
+#chnages strted by vinod
+@app.route("/save_user", methods=['GET', 'POST'])
+def save_user():
+    msg = ''
+    if 'loggedin' in session:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        if request.method == 'POST' and 'role' in request.form and 'first_name' in request.form and 'last_name' in request.form and 'email' in request.form:
+            first_name = request.form['first_name']
+            last_name = request.form['last_name']
+            email = request.form['email']
+            role = request.form['role']
+            action = request.form['action']
+            
+            if action == 'updateUser':
+                userId = request.form['userid']
+                cursor.execute('UPDATE user_table SET first_name=%s, last_name=%s, email=%s, role=%s WHERE id=%s',
+                               (first_name, last_name, email, role, userId))
+                mysql.connection.commit()
+                flash('User updated successfully!')
+            else:
+                password = request.form['password']
+                hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+                cursor.execute('INSERT INTO user_table (first_name, last_name, email, password, role) VALUES (%s, %s, %s, %s, %s)',
+                               (first_name, last_name, email, hashed_password, role))
+                mysql.connection.commit()
+                flash('User created successfully!')
+            return redirect(url_for('users'))
+        
+        return redirect(url_for('users'))
     return redirect(url_for('login'))
 
-@app.route("/view_user", methods =['GET', 'POST'])
+@app.route("/edit_user", methods=['GET', 'POST'])
+def edit_user():
+    msg = ''
+    if 'loggedin' in session:
+        editUserId = request.args.get('userid')
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM user_table WHERE id = %s', (editUserId, ))  # Changed to user_table
+        user_details = cursor.fetchone()  # Fetch only one user since we're editing
+        
+        if request.method == 'POST':
+            first_name = request.form['first_name']
+            last_name = request.form['last_name']
+            email = request.form['email']
+            role = request.form['role']
+            userId = request.form['userid']
+            cursor.execute('UPDATE user_table SET first_name=%s, last_name=%s, email=%s, role=%s WHERE id=%s',
+                           (first_name, last_name, email, role, userId))
+            mysql.connection.commit()
+            flash('User updated successfully!')
+            return redirect(url_for('users'))
+        
+        return render_template("edit_user.html", user=user_details)
+    return redirect(url_for('login'))
+#changes by vinod
+
+@app.route('/update_profile', methods=['GET', 'POST'])
+def update_profile():
+    if 'loggedin' in session:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        
+        if request.method == 'POST' and 'first_name' in request.form and 'last_name' in request.form and 'email' in request.form:
+            updated_first_name = request.form['first_name']
+            updated_last_name = request.form['last_name']
+            updated_email = request.form['email']
+            updated_address = request.form['address'] if 'address' in request.form else None
+            updated_role = request.form['role']  # Ensure role is passed and handled
+
+            # Ensure valid email
+            if not re.match(r'[^@]+@[^@]+\.[^@]+', updated_email):
+                flash('Invalid email address!')
+            else:
+                # Update first name, last name, email, address (not the role, unless admin)
+                cursor.execute('UPDATE user_table SET first_name = %s, last_name = %s, email = %s, address = %s WHERE id = %s',
+                               (updated_first_name, updated_last_name, updated_email, updated_address, session['userid']))
+                mysql.connection.commit()
+                flash('Profile updated successfully!')
+                return redirect(url_for('dashboard'))
+
+        # Retrieve user information to pre-fill the form
+        cursor.execute('SELECT * FROM user_table WHERE id = %s', (session['userid'],))
+        user = cursor.fetchone()
+        return render_template('update_profile.html', user=user)
+    
+    return redirect(url_for('login'))
+
+#chanegs by vinod done
+
+@app.route('/view_user', methods=['GET'])
 def view_user():
     if 'loggedin' in session:
-        viewUserId = request.args.get('id')
+        viewUserId = request.args.get('id') or session['userid']
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
         cursor.execute('''SELECT u.id, u.first_name, u.email, r.name AS role_name
         FROM user_table u
         LEFT JOIN roles r ON u.role = r.id WHERE u.id = % s''', (session['user_id'], ))
@@ -308,6 +415,8 @@ def edit_responsibility(responsibility_id):
         cursor.close()
         mesage ='Responsibility updated successfully!'
         return redirect(url_for('responsibility'))
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
