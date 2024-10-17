@@ -31,3 +31,19 @@ Our AI recommendation system uses collaborative filtering and content-based algo
 - **Database**: MySQL
 - **API**: RESTful API for seamless integration
 
+## Installation
+
+To set up the Library Management System on your local machine, follow these steps:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/susmithkumar/Library_Management_System.git
+   cd Library_Management_System
+2. Create a virtual environment (optional but recommended):
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+3. Install the required dependencies:
+   ```bash
+   pip install -r requirements.txt
+
