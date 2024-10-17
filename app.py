@@ -37,8 +37,11 @@ def login():
         if user and bcrypt.checkpw(password, user['password'].encode('utf-8')):
             session['loggedin'] = True
             session['user_id'] = user['id']
-            session['name'] = user['first_name']
+            session['first_name'] = user['first_name']
+            session['last_name'] = user['last_name']
+            session['active'] = user['active']
             session['email'] = user['email']
+            session['address'] = user['address']
             session['role'] = user['role']
             mesage = 'Logged in successfully !'
             return redirect(url_for('dashboard'))
