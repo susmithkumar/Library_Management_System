@@ -4,7 +4,10 @@
         <li class="nav-item">
             <a class="nav-link" href="#submenu1" data-toggle="collapse" data-target="#submenu1"><strong>Books</strong> ▾</a>
             <ul class="list-unstyled flex-column pl-3 collapse show" id="submenu1" aria-expanded="false">
-                <li class="nav-item"><a class="nav-link" href=""><strong>Manage Books</strong></a></li>
+
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('add_book') }}"><strong>Add Books</strong></a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('view_books') }}"><strong>View Books</strong></a></li>
+
             </ul>
         </li>
         <li class="nav-item"><a class="nav-link" href=""><strong>Issue Books</strong></a></li>

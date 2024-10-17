@@ -46,7 +46,9 @@ def login():
             mesage = 'Incorrect email or password!'
     return render_template('login.html', mesage=mesage)
 
-@app.route('/dashboard', methods=['GET'])
+
+@app.route('/dashboard', methods=['GET', 'POST'])
+
 def dashboard():
     if 'loggedin' in session:
         return render_template("dashboard.html")
@@ -208,6 +210,77 @@ def view_user():
 
         return render_template("view_user.html", user=user, is_editable=is_editable)
     return redirect(url_for('login'))
+
+# Add Book Route
+@app.route('/add_book', methods=['GET', 'POST'])
+def add_book():
+    mesage = ''
+    if 'loggedin' in session:  # Ensure the user is logged in
+        if request.method == 'POST':
+            title = request.form['title']
+            author = request.form['author']
+            rack = request.form['rack']
+            quantity = request.form['quantity']
+
+            # Insert book data into the database
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('INSERT INTO add_book (title, author, rack, quantity) VALUES (%s, %s, %s, %s)',
+                           (title, author, rack, quantity))
+            mysql.connection.commit()
+            # Get the ID of the newly inserted user
+            new_user_id = cursor.lastrowid
+
+            # Create user_code as 'BK' + new_user_id
+            user_code = f'BK{new_user_id}'
+
+            # Update the user_code column with the generated code
+            cursor.execute('UPDATE add_book SET isbn = %s WHERE id = %s', (user_code, new_user_id))
+            
+            # Commit the update
+            mysql.connection.commit()
+            mesage = 'Book added successfully!'
+        else:
+            mesage = 'Please fill out this form!'
+
+        return render_template('add_book.html', mesage=mesage)
+    return redirect(url_for('login'))
+
+# View Books Route
+@app.route('/view_books', methods=['GET'])
+def view_books():
+    if 'loggedin' in session:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM add_book')
+        books = cursor.fetchall()  # Fetch all books
+        return render_template('view_books.html', books=books)
+    return redirect(url_for('login'))
+
+# Edit Book Route
+@app.route('/edit_book/<int:id>', methods=['GET', 'POST'])
+def edit_book(id):
+    mesage = ''
+    if 'loggedin' in session:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        if request.method == 'POST':
+            title = request.form['title']
+            author = request.form['author']
+            rack = request.form['rack']
+            quantity = request.form['quantity']
+
+            # Update book details in the database
+            cursor.execute('UPDATE add_book SET title = %s, author = %s, rack = %s, quantity = %s WHERE id = %s',
+                           (title, author, rack, quantity, id))
+            mysql.connection.commit()
+            mesage = 'Book updated successfully!'
+            return redirect(url_for('view_books', mesage=mesage))
+
+        # Fetch the book details for the given ID
+        cursor.execute('SELECT * FROM add_book WHERE id = %s', (id,))
+        book = cursor.fetchone()
+
+        return render_template('edit_book.html', book=book)
+    return redirect(url_for('login'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)
