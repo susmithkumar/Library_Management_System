@@ -5,14 +5,32 @@
             <a class="nav-link" href="#submenu1" data-toggle="collapse" data-target="#submenu1"><strong>Books</strong> ▾</a>
             <ul class="list-unstyled flex-column pl-3 collapse show" id="submenu1" aria-expanded="false">
 
+
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('add_book') }}"><strong>Add Books</strong></a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('view_books') }}"><strong>View Books</strong></a></li>
 
+
             </ul>
         </li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('roles') }}"><strong>role</strong></a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('responsibility') }}"><strong>responsibilites</strong></a></li>
+
         <li class="nav-item"><a class="nav-link" href=""><strong>Issue Books</strong></a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('view_user') }}"><strong>User</strong></a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}"><strong>Logout</strong></a></li>
+    </ul>
+    <ul>
+        {% if session['responsibilities'] %}
+            {% for responsibility in session['responsibilities'] %}
+                <li>
+                    <a href="{{ responsibility['responsibility_path'] }}">
+                        {{ responsibility['responsibility_name'] }}
+                    </a>
+                </li>
+            {% endfor %}
+        {% else %}
+            <li>No menu items available</li>
+        {% endif %}
     </ul>
 </div>
 
