@@ -4,6 +4,7 @@ import MySQLdb.cursors  # Needed for working with MySQL cursors
 import os
 import re
 import bcrypt
+from flask import g
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
@@ -17,6 +18,8 @@ app.config['MYSQL_DB'] = 'library_management_system'
 # Initialize MySQL
 mysql = MySQL(app)
 
+
+
 @app.route('/')
 def home():
     if 'username' in session:
@@ -25,6 +28,7 @@ def home():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    session.clear()
     mesage = None
     if request.method == 'POST' and 'email' in request.form and 'password' in request.form:
         email = request.form['email']
@@ -33,13 +37,23 @@ def login():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM user_table WHERE email = % s', (email,))
         user = cursor.fetchone()
-        print(user)
         if user and bcrypt.checkpw(password, user['password'].encode('utf-8')):
             session['loggedin'] = True
             session['user_id'] = user['id']
             session['name'] = user['first_name']
             session['email'] = user['email']
             session['role'] = user['role']
+
+            # Fetch responsibilities (and paths) linked to the user's role
+            cursor.execute("""
+                SELECT r.name AS responsibility_name, r.path AS responsibility_path
+                FROM responsibilities r
+                JOIN roles_responsibilities rr ON r.id = rr.responsibility_id
+                WHERE rr.role_id = %s
+            """, (session['role'],))
+
+            # Store the responsibilities (menu links) in the session for use in the left menu
+            session['responsibilities'] = cursor.fetchall()
             mesage = 'Logged in successfully !'
             return redirect(url_for('dashboard'))
         else:
@@ -100,11 +114,10 @@ def view_user():
     if 'loggedin' in session:
         viewUserId = request.args.get('id')
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        print(viewUserId)
-        print(session['user_id'])
-        cursor.execute('SELECT * FROM user_table WHERE id = % s', (session['user_id'], ))
+        cursor.execute('''SELECT u.id, u.first_name, u.email, r.name AS role_name
+        FROM user_table u
+        LEFT JOIN roles r ON u.role = r.id WHERE u.id = % s''', (session['user_id'], ))
         user = cursor.fetchone()
-        print(user)
         return render_template("view_user.html", user = user)
     return redirect(url_for('login'))
 
@@ -112,86 +125,99 @@ def view_user():
 @app.route('/add_role', methods=['GET', 'POST'])
 def add_role():
     mesage = ''
-    if request.method == 'POST' and 'role' in request.form and 'description' in request.form:
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    # Fetch all responsibilities to display in the form
+    cursor.execute("SELECT * FROM responsibilities")
+    all_responsibilities = cursor.fetchall()
+
+    if request.method == 'POST':
         role_name = request.form.get('role')
         role_description = request.form.get('description')
+        selected_responsibilities = request.form.getlist('responsibilities')  # List of selected responsibility IDs
 
-        # Check if the role name is empty
         if not role_name:
-            mesage = 'Role name is required!'
-            return render_template('add_role.html', mesage=mesage)
+            message = "Role name is required!", "danger"
+            return render_template('add_role.html', all_responsibilities=all_responsibilities)
 
-        # Connect to the database
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-        # Check if the roles table exists and create it if it doesn't
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS roles (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(100) NOT NULL UNIQUE,
-                description TEXT
-            );
-        """)
+        cursor.execute("""CREATE TABLE IF NOT EXISTS roles (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(100) NOT NULL,
+        description TEXT)""")
+        # Insert the new role into the roles table
+        cursor.execute("""INSERT INTO roles (name, description) VALUES (%s, %s)""", (role_name, role_description))
+
+        # Fetch the newly created role's ID
+        role_id = cursor.lastrowid
+
+        # Insert selected responsibilities into the roles_responsibilities table
+        for responsibility_id in selected_responsibilities:
+            cursor.execute("""
+                INSERT INTO roles_responsibilities (role_id, responsibility_id) 
+                VALUES (%s, %s)
+            """, (role_id, responsibility_id))
+
         mysql.connection.commit()
-        print("Table successfully created (if it didn't exist).")
+        message = f"Role '{role_name}' added successfully!", "success"
+        return redirect(url_for('roles'))
 
-        # Check if the role already exists
-        cursor.execute('SELECT * FROM roles WHERE name = %s', (role_name,))
-        role = cursor.fetchone()
-
-        if role:
-            mesage = 'Role already exists!'
-        else:
-            # Insert the new role
-            cursor.execute('INSERT INTO roles (name, description) VALUES (%s, %s)', (role_name, role_description))
-            mysql.connection.commit()
-            mesage = 'Role created successfully!'
-
-        # Close the cursor after usage
-        cursor.close()
-
-    elif request.method == 'POST':
-        mesage = 'Please fill out the form!'
-
-    # Render the form with a success or error message
-    return render_template('add_role.html', mesage=mesage)
-
+    return render_template('add_role.html', all_responsibilities=all_responsibilities)
 
 @app.route('/edit_role/<int:role_id>', methods=['GET', 'POST'])
 def edit_role(role_id):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    # Handle GET request (Display edit form)
-    if request.method == 'GET':
-        cursor.execute('SELECT * FROM roles WHERE id = %s', (role_id,))
-        role = cursor.fetchone()
-        if not role:
-            mesage ='Role not found!'
-            return redirect(url_for('roles'))
-        return render_template('edit_role.html', role=role)
+    # Fetch the current role details
+    cursor.execute("SELECT * FROM roles WHERE id = %s", (role_id,))
+    role = cursor.fetchone()
 
-    # Handle POST request (Update the role)
+    # Fetch all responsibilities
+    cursor.execute("SELECT * FROM responsibilities")
+    all_responsibilities = cursor.fetchall()
+
+    # Fetch current responsibilities for this role
+    cursor.execute("SELECT responsibility_id FROM roles_responsibilities WHERE role_id = %s", (role_id,))
+    current_responsibilities = [row['responsibility_id'] for row in cursor.fetchall()]
+
     if request.method == 'POST':
-        role_name = request.form['name']
-        role_description = request.form['description']
+        role_name = request.form.get('name')
+        role_description = request.form.get('description')
+        selected_responsibilities = request.form.getlist('responsibilities')  # List of selected responsibilities (ids)
 
-        if not role_name or not role_description:
-            mesage ='Please fill in all fields!'
+        if not role_name:
+            mesage = "Role name is required!", "danger"
             return redirect(url_for('edit_role', role_id=role_id))
 
-        # Update the role details in the database
-        cursor.execute('UPDATE roles SET name = %s, description = %s WHERE id = %s',
-                       (role_name, role_description, role_id))
+        # Update the role's name and description
+        cursor.execute("""
+                UPDATE roles SET name = %s, description = %s WHERE id = %s""", (role_name, role_description, role_id))
+
+        # Clear existing responsibilities
+        cursor.execute("DELETE FROM roles_responsibilities WHERE role_id = %s", (role_id,))
+
+        # Insert new responsibilities
+        for responsibility_id in selected_responsibilities:
+            cursor.execute("INSERT INTO roles_responsibilities (role_id, responsibility_id) VALUES (%s, %s)", (role_id, responsibility_id))
+
         mysql.connection.commit()
-        mesage ='Role updated successfully!'
+        mesage = f"Role '{role_name}' updated successfully!", "success"
         return redirect(url_for('roles'))
+
+    return render_template('edit_role.html', role=role, all_responsibilities=all_responsibilities, current_responsibilities=current_responsibilities)
+
 
 @app.route('/roles', methods=['GET'])
 def roles():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM roles')
+    cursor.execute("""
+         SELECT r.id AS role_id, r.name AS role_name, r.description, 
+               GROUP_CONCAT(res.name SEPARATOR ', ') AS responsibility_names
+        FROM roles r
+        LEFT JOIN roles_responsibilities rr ON r.id = rr.role_id
+        LEFT JOIN responsibilities res ON rr.responsibility_id = res.id
+        GROUP BY r.id, r.name, r.description""",)
     roles = cursor.fetchall()
-    return render_template('roles.html', role=roles)
+    print(roles)
+    return render_template('roles.html', roles=roles)
 
 
 @app.route('/add_responsibility', methods=['GET', 'POST'])

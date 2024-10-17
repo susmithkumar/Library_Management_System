@@ -18,6 +18,12 @@
                     <label for="description">Description:</label>
                     <input type="text" class="form-control" id="description" name="description" placeholder="Enter description">
                 </div>
+                <div class="form-group">
+                    <label for="responsibilities">Responsibilities:</label><br>
+                    {% for responsibility in all_responsibilities %}
+                        <input type="checkbox" id ="responsibilities" name="responsibilities" value="{{ responsibility.id }}"> {{ responsibility.name }}<br>
+                    {% endfor %}
+                </div>
                 <button type="submit" class="btn btn-primary">Create</button>
             </form>
             <hr>
