@@ -1,0 +1,34 @@
+{% include 'header.html' %}
+<body>
+<div class="container-fluid" id="main">
+    {% include 'top_menus.html' %}
+    <div class="row row-offcanvas row-offcanvas-left">
+        {% include 'left_menus.html' %}
+        <div class="col-md-9 col-lg-10 main">
+            <h2>Add Role</h2>
+            <form action="{{ url_for('add_role') }}" method="post">
+                {% if mesage is defined and mesage %}
+                    <div class="alert alert-warning">{{ mesage }}</div>
+                {% endif %}
+                <div class="form-group">
+                    <label for="role">Name:</label>
+                    <input type="text" class="form-control" id="role" placeholder="Enter Role name"  name="role">
+                </div>
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <input type="text" class="form-control" id="description" name="description" placeholder="Enter description">
+                </div>
+                <div class="form-group">
+                    <label for="responsibilities">Responsibilities:</label><br>
+                    {% for responsibility in all_responsibilities %}
+                        <input type="checkbox" id ="responsibilities" name="responsibilities" value="{{ responsibility.id }}"> {{ responsibility.name }}<br>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn btn-primary">Create</button>
+            </form>
+            <hr>
+        </div>
+    </div>
+</div>
+</body>
+</html>
