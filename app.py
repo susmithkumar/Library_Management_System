@@ -10,8 +10,8 @@ app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 
 # Configure MySQL database connection
 app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'  # Replace with your MySQL user
-app.config['MYSQL_PASSWORD'] = 'W7301@jqir#'  # Replace with your MySQL password
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'W7301@jqir#'
 app.config['MYSQL_DB'] = 'library_management_system'
 
 # Initialize MySQL
@@ -25,7 +25,7 @@ def home():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    mesage = ''
+    mesage = None
     if request.method == 'POST' and 'email' in request.form and 'password' in request.form:
         email = request.form['email']
         password = request.form['password'].encode('utf-8')
@@ -37,7 +37,7 @@ def login():
 
         if user and bcrypt.checkpw(password, user['password'].encode('utf-8')):
             session['loggedin'] = True
-            session['userid'] = user['id']
+            session['user_id'] = user['id']
             session['name'] = user['first_name']
             session['email'] = user['email']
             session['role'] = user['role']
@@ -97,7 +97,8 @@ def register():
         mesage = 'Please fill out the form!'
     return render_template('register.html', mesage=mesage)
 
-@app.route('/users', methods=['GET'])
+
+@app.route("/users", methods =['GET', 'POST'])
 def users():
     if 'loggedin' in session:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -281,6 +282,10 @@ def edit_book(id):
         return render_template('edit_book.html', book=book)
     return redirect(url_for('login'))
 
+
 #my changes dhanesh 
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
