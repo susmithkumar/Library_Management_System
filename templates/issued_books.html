@@ -1,0 +1,35 @@
+{% include 'header.html' %}
+<body>
+  <div class="container-fluid" id="main">
+    {% include 'top_menus.html' %}  	
+    <div class="row row-offcanvas row-offcanvas-left">
+      {% include 'left_menus.html' %}
+      <div class="col-md-9 col-lg-10 main"> 
+        <h2>Issued Books</h2>
+        {% if issued_books %}
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                
+                <th>Book Title</th>
+                <th>Issue Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for book in issued_books %}
+                <tr>
+                  
+                  <td>{{ book.title }}</td>
+                  <td>{{ book.issue_date }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>No books have been issued.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

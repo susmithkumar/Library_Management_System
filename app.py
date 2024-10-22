@@ -592,22 +592,29 @@ def issue_book():
             book_id = request.form['book_id']
             issue_date = request.form['issue_date']
             
-            # Check if the book is available
-            cursor.execute('SELECT quantity FROM add_book WHERE id = %s', (book_id,))
-            book = cursor.fetchone()
-            if book and book['quantity'] > 0:
-                # Issue the book
-                cursor.execute('INSERT INTO book_issues (user_id, book_id, issue_date) VALUES (%s, %s, %s)',
-                               (user_id, book_id, issue_date))
-                # Decrease the book quantity
-                cursor.execute('UPDATE add_book SET quantity = quantity - 1 WHERE id = %s', (book_id,))
-                mysql.connection.commit()
-                flash('Book issued successfully!')
+            # Check if the book is already issued to the user
+            cursor.execute('SELECT * FROM book_issues WHERE user_id = %s AND book_id = %s AND return_date IS NULL', (user_id, book_id))
+            existing_issue = cursor.fetchone()
+            
+            if existing_issue:
+                flash('This book is already issued to the user!')
             else:
-                flash('Book not available!')
+                # Check if the book is available
+                cursor.execute('SELECT quantity FROM add_book WHERE id = %s', (book_id,))
+                book = cursor.fetchone()
+                if book and book['quantity'] > 0:
+                    # Issue the book
+                    cursor.execute('INSERT INTO book_issues (user_id, book_id, issue_date) VALUES (%s, %s, %s)',
+                                   (user_id, book_id, issue_date))
+                    # Decrease the book quantity
+                    cursor.execute('UPDATE add_book SET quantity = quantity - 1 WHERE id = %s', (book_id,))
+                    mysql.connection.commit()
+                    flash('Book issued successfully!')
+                else:
+                    flash('Book not available!')
             return redirect(url_for('issue_book'))
         
-        # Fetch users and books for the form
+        # Fetch users and available books for the form
         cursor.execute('SELECT id, first_name, last_name FROM user_table')
         users = cursor.fetchall()
         cursor.execute('SELECT id, title FROM add_book WHERE quantity > 0')
@@ -615,8 +622,19 @@ def issue_book():
         return render_template('issue_book.html', users=users, books=books)
     return redirect(url_for('login'))
 
-
-
+@app.route('/issued_books')
+def issued_books():
+    if 'loggedin' in session:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('''
+            SELECT bi.id, b.title, bi.issue_date 
+            FROM book_issues bi 
+            JOIN add_book b ON bi.book_id = b.id 
+            WHERE bi.user_id = %s AND bi.return_date IS NULL
+        ''', (session['user_id'],))
+        issued_books = cursor.fetchall()
+        return render_template('issued_books.html', issued_books=issued_books)
+    return redirect(url_for('login'))
 
 import requests
 import random
@@ -676,10 +694,40 @@ def populate_books_table():
     
     cursor.close()
 
+def assign_books_to_users():
+    with app.app_context():
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        
+        # Get users
+        cursor.execute('SELECT id FROM user_table LIMIT 7')
+        users = cursor.fetchall()
+        
+        # Get available books
+        cursor.execute('SELECT id FROM add_book WHERE quantity > 0 LIMIT 7')
+        books = cursor.fetchall()
+        
+        for user in users:
+            for book in books:
+                # Check if the book is already issued to the user
+                cursor.execute('SELECT * FROM book_issues WHERE user_id = %s AND book_id = %s AND return_date IS NULL', (user['id'], book['id']))
+                existing_issue = cursor.fetchone()
+                
+                if not existing_issue:
+                    # Issue the book
+                    cursor.execute('INSERT INTO book_issues (user_id, book_id, issue_date) VALUES (%s, %s, CURDATE())',
+                                   (user['id'], book['id']))
+                    # Decrease the book quantity
+                    cursor.execute('UPDATE add_book SET quantity = quantity - 1 WHERE id = %s', (book['id'],))
+                    break  # Move to the next user after issuing one book
+        
+        mysql.connection.commit()
+        print("Books assigned to users successfully!")
+
 
 # Call this function when your app starts
 if __name__ == '__main__':
     create_schema()
     with app.app_context():
         populate_books_table()
+        assign_books_to_users()
     app.run(debug=True)
