@@ -1,5 +1,5 @@
-/__pycache__
+__pycache__/
 .idea/
-frontend_testcases/__pycache__
+frontend_testcases/__pycache__/
 library managament system.iml
-/myenv
+myenv/
