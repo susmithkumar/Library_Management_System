@@ -9,7 +9,9 @@
             <h3>User Listing</h3>
             <br>
             <div class="float-right mb-2 col-md-2">
-                <button type="button" id="addUser" class="btn btn-info" title="Add book" href="{{url_for('register')}}"><span class="glyphicon glyphicon-plus">Add User</span></button>
+                <a class="btn btn-info" href="{{ url_for('register') }}">
+                    <span class="glyphicon glyphicon-plus"></span> Add User
+                </a>
             </div>
             <br><br>
             <table class="table table-striped">

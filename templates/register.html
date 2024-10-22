@@ -2,7 +2,10 @@
 <body>
   <div class="container-fluid" id="main">
   {% include 'top_menus.html' %}  	
-    <div class="row row-offcanvas row-offcanvas-left">      
+    <div class="row row-offcanvas row-offcanvas-left">
+    {% if session['loggedin'] == True %}
+        {% include 'left_menus.html' %}
+    {% endif %}
       <div class="col-md-9 col-lg-10 main"> 
 	<h2>User Registration</h2>
 	<form action="{{ url_for('register') }}" method="post">
@@ -30,7 +33,9 @@
 			<input type="address" class="form-control" id="address" name="address" placeholder="Enter address" name="address">
 		</div>  
 		<button type="submit" class="btn btn-primary">Register</button>
-		<p class="bottom">Already have an account?  <a class="bottom" href="{{url_for('login')}}"> Login here</a></p>
+        {% if session['loggedin'] == False %}
+		    <p class="bottom">Already have an account?  <a class="bottom" href="{{url_for('login')}}"> Login here</a></p>
+        {% endif %}
 	</form>
 <hr>         
        </div>       
