@@ -6,7 +6,8 @@
             {% include 'left_menus.html' %}
             <div class="col-md-9 col-lg-10 main">
                 <h2>View All Books</h2>
-                <table class="table table-striped">
+                {% if books %}
+                    <table class="table table-striped">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -15,7 +16,6 @@
                             <th>Rack</th>
                             <th>Quantity</th>
                             <th>ISBN</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -27,13 +27,13 @@
                             <td>{{ book.rack }}</td>
                             <td>{{ book.quantity }}</td>
                             <td>{{ book.isbn }}</td>
-                            <td>
-                                <a href="{{ url_for('edit_book', id=book.id) }}" class="btn btn-warning btn-sm">Edit</a>
-                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                {% else %}
+                    <p>No books found.</p>
+                {% endif %}
             </div>
         </div>
     </div>
