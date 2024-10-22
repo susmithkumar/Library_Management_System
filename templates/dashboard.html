@@ -6,7 +6,33 @@
       {% include 'left_menus.html' %}
       <div class="col-md-9 col-lg-10 main"> 
 		<h2>Dashboard</h2>
-        <div class="row mb-3">		
+          <div class="col-md-12 mb-3">
+              <form action="{{ url_for('search_books') }}" method="POST" class="form-inline">
+                  <input type="text" name="search_term" class="form-control mr-2" placeholder="Search for books..." required value="{{ search_term if search_term else '' }}">
+                  <button type="submit" class="btn btn-primary">Search</button>
+              </form>
+          </div>
+          {% if search_results %}
+              <table class="table table-striped">
+                  <thead>
+                  <tr>
+                      <th>Title</th>
+                      <th>Author</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  {% for book in search_results %}
+                      <tr>
+                          <td>{{ book.title }}</td>
+                          <td>{{ book.author }}</td>
+                      </tr>
+                  {% endfor %}
+                  </tbody>
+              </table>
+          {% else %}
+              <p>No books found.</p>
+          {% endif %}
+            <div class="row mb-3">
           <div class="col-xl-3 col-lg-6">
             <div class="card card-inverse card-success">
               <div class="card-block bg-success">
@@ -52,8 +78,8 @@
             </div>
           </div>
         </div>
-        <hr>         
-       </div>       
+            <hr>
+        </div>
       </div>     
     </div>
   </body>
