@@ -1,36 +1,27 @@
-{% include 'header.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Book</title>
+</head>
 <body>
-    <div class="container-fluid" id="main">
-        {% include 'top_menus.html' %}
-        <div class="row row-offcanvas row-offcanvas-left">
-            {% include 'left_menus.html' %}
-            <div class="col-md-9 col-lg-10 main">
-                <h2>Add a New Book</h2>
-                <form action="{{ url_for('add_book') }}" method="POST">
-                    {% if message is defined and message %}
-                        <div class="alert alert-warning">{{ message }}</div>
-                    {% endif %}
-                    <div class="form-group">
-                        <label for="title">Title:</label>
-                        <input type="text" class="form-control" id="title" name="title" placeholder="Enter book title" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="author">Author:</label>
-                        <input type="text" class="form-control" id="author" name="author" placeholder="Enter author name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="rack">Rack:</label>
-                        <input type="text" class="form-control" id="rack" name="rack" placeholder="Please enter rack number" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="quantity">Quantity:</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Add Book</button>
-                </form>
-                <hr>
-            </div>
-        </div>
-    </div>
+    <h1>Add Book</h1>
+    <form action="" method="post">
+        <label for="title">Title:</label><br>
+        <input type="text" id="title" name="title" required><br>
+        
+        <label for="author">Author:</label><br>
+        <input type="text" id="author" name="author" required><br>
+        
+        <label for="publication_date">Publication Date:</label><br>
+        <input type="date" id="publication_date" name="publication_date"><br>
+        
+        <label for="isbn">ISBN:</label><br>
+        <input type="text" id="isbn" name="isbn"><br>
+        
+        <label for="description">Description:</label><br>
+        <textarea id="description" name="description"></textarea><br>
+        
+        <input type="submit" value="Add Book">
+    </form>
 </body>
 </html>
