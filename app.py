@@ -17,6 +17,22 @@ app.config['MYSQL_DB'] = 'library_management_system'
 # Initialize MySQL
 mysql = MySQL(app)
 
+def create_schema():
+    with app.app_context():
+        try:
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            with open('schema.sql', 'r') as f:
+                sql = f.read()
+                sql_statements = sql.split(';')
+                for statement in sql_statements:
+                    if statement.strip():  # Ignore empty statements
+                        cursor.execute(statement)
+                        mysql.connection.commit()
+            print("Schema created successfully!")
+        except mysql.connection.Error as err:
+            print("Failed creating schema: {}".format(err))
+        finally:
+            cursor.close()
 
 
 @app.route('/')
@@ -33,46 +49,102 @@ def login():
         email = request.form['email']
         password = request.form['password'].encode('utf-8')
         print("Executing query: SELECT * FROM user_table WHERE email = %s", (email,))
-
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM user_table WHERE email = %s', (email,))
         user = cursor.fetchone()
-
         if user and bcrypt.checkpw(password, user['password'].encode('utf-8')):
             session['loggedin'] = True
             session['user_id'] = user['id']
-            session['first_name'] = user['first_name']
-            session['last_name'] = user['last_name']
-            session['active'] = user['active']
+            session['name'] = user['first_name']
             session['email'] = user['email']
-            session['address'] = user['address']
             session['role'] = user['role']
-
-
+            
+            # Check if 'active' key exists in user dictionary
+            if 'active' in user:
+                session['active'] = user['active']
+            else:
+                # Set a default value or skip setting this session variable
+                session['active'] = True  # or whatever default value you want
+            
             # Fetch responsibilities (and paths) linked to the user's role
             cursor.execute("""
-                SELECT r.name AS responsibility_name, r.path AS responsibility_path
-                FROM responsibilities r
-                JOIN roles_responsibilities rr ON r.id = rr.responsibility_id
-                WHERE rr.role_id = %s
+            SELECT r.name AS responsibility_name, r.path AS responsibility_path
+            FROM responsibilities r
+            JOIN roles_responsibilities rr ON r.id = rr.responsibility_id
+            WHERE rr.role_id = %s
             """, (session['role'],))
-
+            
             # Store the responsibilities (menu links) in the session for use in the left menu
             session['responsibilities'] = cursor.fetchall()
+            
             mesage = 'Logged in successfully !'
-
             return redirect(url_for('dashboard'))
         else:
             mesage = 'Incorrect email or password!'
     return render_template('login.html', mesage=mesage)
 
-
 @app.route('/dashboard', methods=['GET', 'POST'])
-
 def dashboard():
     if 'loggedin' in session:
-        return render_template("dashboard.html")
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        
+        # Get total books count
+        cursor.execute('SELECT SUM(quantity) as total_books FROM add_book')
+        total_books = cursor.fetchone()['total_books'] or 0
+        
+        # Get available books count
+        cursor.execute('SELECT SUM(quantity) as available_books FROM add_book WHERE quantity > 0')
+        available_books = cursor.fetchone()['available_books'] or 0
+        
+        # Get issued books count
+        cursor.execute('SELECT COUNT(*) as issued_books FROM book_issues WHERE is_returned = FALSE')
+        issued_books = cursor.fetchone()['issued_books'] or 0
+        
+        # Get returned books count
+        cursor.execute('SELECT COUNT(*) as returned_books FROM book_issues WHERE is_returned = TRUE')
+        returned_books = cursor.fetchone()['returned_books'] or 0
+        
+        return render_template("dashboard.html", 
+                               total_books=total_books,
+                               available_books=available_books,
+                               issued_books=issued_books,
+                               returned_books=returned_books)
     return redirect(url_for('login'))
+
+@app.route('/search_books', methods=['POST'])
+def search_books():
+    search_term = request.form.get('search_term')
+    if search_term:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        # Fetch books that match the search term in title or author
+        cursor.execute('''
+            SELECT * FROM add_book 
+            WHERE title LIKE %s OR author LIKE %s
+        ''', ('%' + search_term + '%', '%' + search_term + '%'))
+        results = cursor.fetchall()
+
+        # Get total books count
+        cursor.execute('SELECT SUM(quantity) as total_books FROM add_book')
+        total_books = cursor.fetchone()['total_books'] or 0
+        
+        # Get available books count
+        cursor.execute('SELECT SUM(quantity) as available_books FROM add_book WHERE quantity > 0')
+        available_books = cursor.fetchone()['available_books'] or 0
+        
+        # Get issued books count
+        cursor.execute('SELECT COUNT(*) as issued_books FROM book_issues WHERE is_returned = FALSE')
+        issued_books = cursor.fetchone()['issued_books'] or 0
+        
+        # Get returned books count
+        cursor.execute('SELECT COUNT(*) as returned_books FROM book_issues WHERE is_returned = TRUE')
+        returned_books = cursor.fetchone()['returned_books'] or 0
+
+        cursor.close()
+        return render_template('dashboard.html', search_results=results, search_term=search_term, total_books=total_books,
+                               available_books=available_books,
+                               issued_books=issued_books,
+                               returned_books=returned_books)
+    return redirect(url_for('dashboard'))
 
 @app.route('/logout')
 def logout():
@@ -121,7 +193,6 @@ def register():
 
 
 @app.route("/users", methods =['GET', 'POST'])
-
 def users():
     if 'loggedin' in session:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -452,6 +523,7 @@ def view_books():
         books = cursor.fetchall()  # Fetch all books
         return render_template('view_books.html', books=books)
     return redirect(url_for('login'))
+
 # Edit Book Route
 @app.route('/edit_book/<int:id>', methods=['GET', 'POST'])
 def edit_book(id):
@@ -478,23 +550,136 @@ def edit_book(id):
         return render_template('edit_book.html', book=book)
     return redirect(url_for('login'))
 
-@app.route('/search_books', methods=['POST'])
-def search_books():
-    search_term = request.form.get('search_term')
-    print(search_term)
-    if search_term:
+@app.route('/return_book', methods=['GET', 'POST'])
+def return_book():
+    if 'loggedin' in session:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        if request.method == 'POST':
+            issue_id = request.form['issue_id']
+            return_date = request.form['return_date']
+            
+            # Mark the book as returned
+            cursor.execute('UPDATE book_issues SET is_returned = TRUE, return_date = %s WHERE id = %s',
+                           (return_date, issue_id))
+            # Increase the book quantity
+            cursor.execute('''
+                UPDATE add_book 
+                SET quantity = quantity + 1 
+                WHERE id = (SELECT book_id FROM book_issues WHERE id = %s)
+            ''', (issue_id,))
+            mysql.connection.commit()
+            flash('Book returned successfully!')
+            return redirect(url_for('return_book'))
+        
+        # Fetch issued books that haven't been returned
+        cursor.execute('''
+            SELECT bi.id, u.first_name, u.last_name, b.title, bi.issue_date 
+            FROM book_issues bi 
+            JOIN user_table u ON bi.user_id = u.id 
+            JOIN add_book b ON bi.book_id = b.id 
+            WHERE bi.is_returned = FALSE
+        ''')
+        issued_books = cursor.fetchall()
+        return render_template('return_book.html', issued_books=issued_books)
+    return redirect(url_for('login'))
 
-        # Fetch books that match the search term
-        cursor.execute('SELECT * FROM add_book WHERE title LIKE %s OR author LIKE %s', ('%' + search_term + '%','%' + search_term + '%',))
-        results = cursor.fetchall()
-        print(results)
-        cursor.close()
-        return render_template('dashboard.html', search_results=results, search_term=search_term)
+@app.route('/issue_book', methods=['GET', 'POST'])
+def issue_book():
+    if 'loggedin' in session:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        if request.method == 'POST':
+            user_id = request.form['user_id']
+            book_id = request.form['book_id']
+            issue_date = request.form['issue_date']
+            
+            # Check if the book is available
+            cursor.execute('SELECT quantity FROM add_book WHERE id = %s', (book_id,))
+            book = cursor.fetchone()
+            if book and book['quantity'] > 0:
+                # Issue the book
+                cursor.execute('INSERT INTO book_issues (user_id, book_id, issue_date) VALUES (%s, %s, %s)',
+                               (user_id, book_id, issue_date))
+                # Decrease the book quantity
+                cursor.execute('UPDATE add_book SET quantity = quantity - 1 WHERE id = %s', (book_id,))
+                mysql.connection.commit()
+                flash('Book issued successfully!')
+            else:
+                flash('Book not available!')
+            return redirect(url_for('issue_book'))
+        
+        # Fetch users and books for the form
+        cursor.execute('SELECT id, first_name, last_name FROM user_table')
+        users = cursor.fetchall()
+        cursor.execute('SELECT id, title FROM add_book WHERE quantity > 0')
+        books = cursor.fetchall()
+        return render_template('issue_book.html', users=users, books=books)
+    return redirect(url_for('login'))
 
-    return redirect(url_for('dashboard'))
 
-#my changes dhanesh
-#my changes dhanesh 
+
+
+import requests
+import random
+import time
+
+def populate_books_table():
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    # Check current book count
+    cursor.execute("SELECT COUNT(*) as count FROM add_book")
+    count = cursor.fetchone()['count']
+    
+    if count < 100:
+        books_to_add = 100 - count
+        total_books_added = 0
+        
+        while total_books_added < books_to_add:
+            # Use a random letter to get varied results
+            query = random.choice(['a', 'e', 'i', 'o', 'u', 'y'])
+            url = f"https://www.googleapis.com/books/v1/volumes?q={query}&maxResults=40"
+            
+            try:
+                response = requests.get(url)
+                response.raise_for_status()  # Raises an HTTPError for bad responses
+                books = response.json().get('items', [])
+                
+                for book in books:
+                    if total_books_added >= books_to_add:
+                        break
+                    
+                    volume_info = book.get('volumeInfo', {})
+                    title = volume_info.get('title', 'Unknown Title')[:255]
+                    authors = ', '.join(volume_info.get('authors', ['Unknown Author']))[:255]
+                    isbn = volume_info.get('industryIdentifiers', [{}])[0].get('identifier', 'Unknown ISBN')[:20]
+                    rack = f"Rack-{random.randint(1, 100)}"
+                    quantity = random.randint(1, 10)
+                    
+                    cursor.execute('''
+                    INSERT INTO add_book (title, author, rack, quantity, isbn)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ''', (title, authors, rack, quantity, isbn))
+                    
+                    total_books_added += 1
+                
+                mysql.connection.commit()
+                
+                # Add a delay between requests to avoid rate limiting
+                time.sleep(1)
+                
+            except requests.exceptions.RequestException as e:
+                print(f"An error occurred: {e}")
+                break
+        
+        print(f"Added {total_books_added} books to the database.")
+    else:
+        print("The books table already has 100 or more entries.")
+    
+    cursor.close()
+
+
+# Call this function when your app starts
 if __name__ == '__main__':
+    create_schema()
+    with app.app_context():
+        populate_books_table()
     app.run(debug=True)

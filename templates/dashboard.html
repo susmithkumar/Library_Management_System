@@ -32,51 +32,51 @@
           {% else %}
               <p>No books found.</p>
           {% endif %}
-            <div class="row mb-3">
-          <div class="col-xl-3 col-lg-6">
-            <div class="card card-inverse card-success">
-              <div class="card-block bg-success">
-                <div class="rotate">
-                  <i class="fa fa-user fa-5x"></i>
+          <div class="row mb-3">
+            <div class="col-xl-3 col-lg-6">
+                <div class="card card-inverse card-success">
+                    <div class="card-block bg-success">
+                        <div class="rotate">
+                            <i class="fa fa-book fa-5x"></i>
+                        </div>
+                        <h6 class="text-uppercase">Total Books</h6>
+                        <h1 class="display-1">{{ total_books }}</h1>
+                    </div>
                 </div>
-                <h6 class="text-uppercase">Total Books</h6>
-                <h1 class="display-1"><a href="">150</a></h1>
-              </div>
-            </div> 
-          </div>        
-          <div class="col-xl-3 col-lg-6">
-            <div class="card card-inverse card-info">
-              <div class="card-block bg-info">
-                <div class="rotate">
-                  <i class="fa fa-twitter fa-5x"></i>
-                </div>
-                <h6 class="text-uppercase">Available Books</h6>
-                <h1 class="display-1"><a href="">30</a></h1>
-              </div>
             </div>
-          </div>
-          <div class="col-xl-3 col-lg-6">
-            <div class="card card-inverse card-warning">
-              <div class="card-block bg-warning">
-                <div class="rotate">
-                  <i class="fa fa-share fa-5x"></i>
+            <div class="col-xl-3 col-lg-6">
+                <div class="card card-inverse card-info">
+                    <div class="card-block bg-info">
+                        <div class="rotate">
+                            <i class="fa fa-list fa-4x"></i>
+                        </div>
+                        <h6 class="text-uppercase">Available Books</h6>
+                        <h1 class="display-1">{{ available_books }}</h1>
+                    </div>
                 </div>
-                <h6 class="text-uppercase">Returned Books</h6>
-                <h1 class="display-1"><a href="">50</a></h1>
-              </div>
             </div>
-          </div>
-		  <div class="col-xl-3 col-lg-6">
-            <div class="card card-inverse card-danger">
-              <div class="card-block bg-danger">
-                <div class="rotate">
-                  <i class="fa fa-list fa-4x"></i>
+            <div class="col-xl-3 col-lg-6">
+                <div class="card card-inverse card-warning">
+                    <div class="card-block bg-warning">
+                        <div class="rotate">
+                            <i class="fa fa-share fa-5x"></i>
+                        </div>
+                        <h6 class="text-uppercase">Issued Books</h6>
+                        <h1 class="display-1">{{ issued_books }}</h1>
+                    </div>
                 </div>
-                <h6 class="text-uppercase">Issued Books</h6>
-                <h1 class="display-1"><a href="">80</a></h1>
-              </div>
             </div>
-          </div>
+            <div class="col-xl-3 col-lg-6">
+                <div class="card card-inverse card-danger">
+                    <div class="card-block bg-danger">
+                        <div class="rotate">
+                            <i class="fa fa-undo fa-4x"></i>
+                        </div>
+                        <h6 class="text-uppercase">Returned Books</h6>
+                        <h1 class="display-1">{{ returned_books }}</h1>
+                    </div>
+                </div>
+            </div>
         </div>
             <hr>
         </div>

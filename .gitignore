@@ -2,4 +2,4 @@ __pycache__/
 .idea/
 frontend_testcases/__pycache__
 library managament system.iml
-venv
+myenv
