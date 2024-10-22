@@ -11,6 +11,7 @@
         {% else %}
             <li>No menu items available</li>
         {% endif %}
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('issued_books') }}"><strong>Issued Books</strong></a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}"><strong>Logout</strong></a></li>
     </ul>
 </div>

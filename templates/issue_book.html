@@ -1,0 +1,13 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2>Issue Book</h2>
+<form method="POST">
+    <select name="book_id" required>
+        {% for book in books %}
+            <option value="{{ book.id }}">{{ book.title }}</option>
+        {% endfor %}
+    </select>
+    <input type="date" name="issue_date" required>
+    <button type="submit">Issue Book</button>
+</form>
+{% endblock %}
