@@ -8,6 +8,11 @@ import bcrypt
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 
+""
+
+# TODO: Consider refactoring this function for better readability.
+# Modularize the code, define different routes to it.
+
 # Configure MySQL database connection
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'  # Replace with your MySQL user
@@ -106,6 +111,8 @@ def users():
 #chnages strted by vinod
 @app.route("/save_user", methods=['GET', 'POST'])
 def save_user():
+    # TODO: Consider refactoring this function for better readability.
+    # Add a database schema and maintain it in a file.
     msg = ''
     if 'loggedin' in session:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -136,6 +143,8 @@ def save_user():
 
 @app.route("/edit_user", methods=['GET', 'POST'])
 def edit_user():
+    # TODO: Consider refactoring this function for better readability.
+    # Add a database schema and maintain it in a file.
     msg = ''
     if 'loggedin' in session:
         editUserId = request.args.get('userid')
