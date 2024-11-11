@@ -1,57 +1,33 @@
-# This is a basic workflow to help you get started with Actions
+name: Run Tests
 
-name: Python Tests
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
-  #workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-#jobs:
-  # This workflow contains a single job called "build"
-  #build:
-    # The type of runner that the job will run on
-    #runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    #steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      #- uses: actions/checkout@v4
-
-      # Runs a single command using the runners shell
-      #- name: Run a one-line script
-      #  run: echo Hello, world!
-
+    branches: [ main ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.x'
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest
-        
-    - name: Run tests
-      run: pytest
+        pip install -r requirements.txt
 
-      # Runs a set of commands using the runners shell
-    - name: Run a multi-line script
+    - name: Run tests
       run: |
-        echo Add other actions to build,
-        echo test, and deploy your project.
+        python -m unittest discover tests
+
+    - name: Run Flask tests
+      run: |
+        pip install flask-unittest
+        python -m unittest discover -v -s tests -p '*_test.py'
