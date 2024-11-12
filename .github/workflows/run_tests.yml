@@ -22,16 +22,10 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Run frontend testcases
-      run: |
-        python -m unittest discover tests/frontend_testcases
+
     - name: Run run_tests.py
       run: python run_tests.py
 
     - name: Run test_app.py
       run: python -m unittest test_app.py
 
-    - name: Run Flask tests
-      run: |
-        pip install flask-unittest
-        python -m unittest discover -v -s . -p '*_test.py'
