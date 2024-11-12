@@ -24,7 +24,7 @@ jobs:
         pip install -r requirements.txt
     - name: Run frontend testcases
       run: |
-        python -m unittest discover frontend_testcases
+        python -m unittest discover tests/frontend_testcases
     - name: Run run_tests.py
       run: python run_tests.py
 
