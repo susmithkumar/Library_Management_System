@@ -1,3 +1,4 @@
+/* Global Styles */
 body {
   font-size: 16px;
   font-family: 'Poppins', sans-serif;
@@ -7,6 +8,7 @@ body {
   background-color: #f4f6f8;
 }
 
+/* Responsive Sidebar for Off-Canvas Menu */
 @media screen and (max-width: 48em) {
   .sidebar-offcanvas {
     position: fixed;
@@ -26,27 +28,16 @@ body {
     display: block;
     padding: 15px 20px;
     color: #94a3b8;
+    text-decoration: none;
     transition: color 0.3s, transform 0.3s;
   }
   .sidebar-offcanvas a:hover {
     color: #e2e8f0;
     transform: scale(1.05);
   }
-
 }
 
-@media screen and (max-width: 48em) {
-  .sidebar-offcanvas {
-    width: 60%;
-    transform: translateX(-100%);
-  }
-  .row-offcanvas-left.active .sidebar-offcanvas {
-    transform: translateX(0);
-  }
-}
-
-
-
+/* Card Component Styles */
 .card {
   position: relative;
   border-radius: 12px;
@@ -75,9 +66,9 @@ body {
   display: block;
 }
 
-
+/* Link Styles */
 .display-1 a {
-	text-decoration:none;
+  text-decoration: none;
 }
 
 .leftMenus a {
@@ -104,6 +95,7 @@ body {
   width: 100%;
 }
 
+/* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
   body {
     background-color: #181a1b;
@@ -119,3 +111,35 @@ body {
   }
 }
 
+#sidebar {
+  z-index: 1050; /* Bootstrap's default offcanvas z-index */
+}
+.hamburger-icon {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.hamburger-icon span {
+  display: block;
+  width: 24px;
+  height: 3px;
+  background-color: #fff;
+  margin: 4px 0;
+  border-radius: 2px;
+  transition: background-color 0.3s;
+}
+
+.hamburger-icon:hover span {
+  background-color: #ccc; /* Change color on hover */
+}
+.hamburger-icon i.bi-list {
+  font-size: 1.5rem; /* Adjust icon size */
+  color: #ffffff;    /* Change color if needed */
+}
