@@ -12,3 +12,4 @@ beautifulsoup4==4.10.0
 Flask-MySQLdb==0.2.0
 Werkzeug==2.0.3
 requests
+bcrypt
