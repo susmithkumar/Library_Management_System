@@ -14,5 +14,4 @@ Werkzeug==2.0.3
 requests
 bcrypt
 openai
-json
 numpy
