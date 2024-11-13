@@ -1,19 +1,37 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_mysqldb import MySQL
 import MySQLdb.cursors  # Needed for working with MySQL cursors
-import os
-import re
-import bcrypt
+import re, bcrypt, requests, random, time, os
+import openai
+from sentence_transformers import SentenceTransformer
+from sqlalchemy import create_engine, text
+import json
+import numpy as np
+from werkzeug.utils import secure_filename
+from scipy.spatial.distance import cosine
+
+
 
 app = Flask(__name__)
+model = SentenceTransformer('all-MiniLM-L6-v2')
+engine = create_engine("mysql+pymysql://root:W7301%40jqir%23@localhost/library_management_system")
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Set the upload folder
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
+# Optionally, limit the maximum size of uploaded files (e.g., 2 MB)
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2 MB limit
+
+# Ensure the upload folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Configure MySQL database connection
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'W7301@jqir#'
 app.config['MYSQL_DB'] = 'library_management_system'
-
 # Initialize MySQL
 mysql = MySQL(app)
 
@@ -91,15 +109,13 @@ def dashboard():
         # Get total books count
         cursor.execute('SELECT SUM(quantity) as total_books FROM add_book')
         total_books = cursor.fetchone()['total_books'] or 0
-        
-        # Get available books count
-        cursor.execute('SELECT SUM(quantity) as available_books FROM add_book WHERE quantity > 0')
-        available_books = cursor.fetchone()['available_books'] or 0
-        
+
         # Get issued books count
         cursor.execute('SELECT COUNT(*) as issued_books FROM book_issues WHERE is_returned = FALSE')
         issued_books = cursor.fetchone()['issued_books'] or 0
-        
+
+        available_books = total_books - issued_books
+
         # Get returned books count
         cursor.execute('SELECT COUNT(*) as returned_books FROM book_issues WHERE is_returned = TRUE')
         returned_books = cursor.fetchone()['returned_books'] or 0
@@ -113,38 +129,53 @@ def dashboard():
 
 @app.route('/search_books', methods=['POST'])
 def search_books():
-    search_term = request.form.get('search_term')
-    if search_term:
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        # Fetch books that match the search term in title or author
-        cursor.execute('''
-            SELECT * FROM add_book 
-            WHERE title LIKE %s OR author LIKE %s
-        ''', ('%' + search_term + '%', '%' + search_term + '%'))
-        results = cursor.fetchall()
+    if 'loggedin' in session:
+        search_term = request.form.get('search_term')
+        if search_term:
+            # Generate embedding for the search term
+            query_embedding = openai.Embedding.create(input=search_term, model="text-embedding-ada-002")['data'][0]['embedding']
 
-        # Get total books count
-        cursor.execute('SELECT SUM(quantity) as total_books FROM add_book')
-        total_books = cursor.fetchone()['total_books'] or 0
-        
-        # Get available books count
-        cursor.execute('SELECT SUM(quantity) as available_books FROM add_book WHERE quantity > 0')
-        available_books = cursor.fetchone()['available_books'] or 0
-        
-        # Get issued books count
-        cursor.execute('SELECT COUNT(*) as issued_books FROM book_issues WHERE is_returned = FALSE')
-        issued_books = cursor.fetchone()['issued_books'] or 0
-        
-        # Get returned books count
-        cursor.execute('SELECT COUNT(*) as returned_books FROM book_issues WHERE is_returned = TRUE')
-        returned_books = cursor.fetchone()['returned_books'] or 0
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-        cursor.close()
-        return render_template('dashboard.html', search_results=results, search_term=search_term, total_books=total_books,
-                               available_books=available_books,
-                               issued_books=issued_books,
-                               returned_books=returned_books)
-    return redirect(url_for('dashboard'))
+            # Fetch all book embeddings from the database
+            cursor.execute('SELECT id, title, author, embedding FROM add_book')
+            books = cursor.fetchall()
+
+            # Calculate cosine similarity between the query embedding and each book embedding
+            results = []
+            for book in books:
+                if book['embedding']:  # Ensure the embedding is not null
+                    # Parse JSON embedding (from JSON string to Python list of floats)
+                    book_embedding = np.array(json.loads(book['embedding']))
+
+                    # Calculate cosine similarity
+                    similarity = 1 - cosine(query_embedding, book_embedding)
+                    results.append((similarity, book))
+
+            # Sort results by similarity in descending order
+            results.sort(reverse=True, key=lambda x: x[0])
+
+            # Retrieve top N results (e.g., top 10)
+            top_results = [book for _, book in results[:10]]
+
+            # Get additional statistics
+            cursor.execute('SELECT SUM(quantity) as total_books FROM add_book')
+            total_books = cursor.fetchone()['total_books'] or 0
+
+            cursor.execute('SELECT COUNT(*) as issued_books FROM book_issues WHERE is_returned = FALSE')
+            issued_books = cursor.fetchone()['issued_books'] or 0
+
+            available_books = total_books - issued_books
+
+            cursor.execute('SELECT COUNT(*) as returned_books FROM book_issues WHERE is_returned = TRUE')
+            returned_books = cursor.fetchone()['returned_books'] or 0
+
+            cursor.close()
+            return render_template('dashboard.html', search_results=top_results, search_term=search_term,
+                                   total_books=total_books, available_books=available_books,
+                                   issued_books=issued_books, returned_books=returned_books)
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
 
 @app.route('/logout')
 def logout():
@@ -482,10 +513,21 @@ def add_book():
             rack = request.form['rack']
             quantity = request.form['quantity']
 
+            # Handle file upload
+            image_file = request.files['image']
+            if image_file and image_file.filename != '':
+                # Ensure the filename is secure and save it
+                filename = secure_filename(image_file.filename)
+                image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                image_file.save(image_path)
+                image_url = url_for('static', filename='uploads/' + filename)
+            else:
+                image_url = None  # No image provided
+
             # Insert book data into the database
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('INSERT INTO add_book (title, author, rack, quantity) VALUES (%s, %s, %s, %s)',
-                           (title, author, rack, quantity))
+            cursor.execute('INSERT INTO add_book (title, author, rack, quantity, image_url) VALUES (%s, %s, %s, %s, %s)',
+                           (title, author, rack, quantity, image_url))
             mysql.connection.commit()
             # Get the ID of the newly inserted user
             new_user_id = cursor.lastrowid
@@ -636,9 +678,6 @@ def issued_books():
         return render_template('issued_books.html', issued_books=issued_books)
     return redirect(url_for('login'))
 
-import requests
-import random
-import time
 
 def populate_books_table():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -723,6 +762,45 @@ def assign_books_to_users():
         mysql.connection.commit()
         print("Books assigned to users successfully!")
 
+
+def generate_book_summary(title, author, description=""):
+    # Define the message format for generating a book summary
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant that generates book summaries."},
+        {"role": "user", "content": f"Provide a summary for the following book:\n\nTitle: {title}\nAuthor: {author}\nDescription: {description}\n\nPlease provide a concise overview of the book, focusing on the main themes, plot, and any notable characters."}
+    ]
+
+    try:
+        # Use the updated ChatCompletion API
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # or "gpt-4" if you have access
+            messages=messages,
+            max_tokens=150,
+            temperature=0.5
+        )
+
+        # Extract the summary from the response
+        summary = response['choices'][0]['message']['content'].strip()
+        print(summary)
+        return summary
+
+    except Exception as e:
+        print("Error generating summary:", e)
+        return "Unable to generate summary at this time due to an unexpected error."
+
+@app.route('/book_summary/<int:book_id>', methods=['GET'])
+def book_summary(book_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('SELECT * FROM add_book WHERE id = %s', (book_id,))
+    book = cursor.fetchone()  # Fetch the first matching row as a dictionary
+
+    # Check if the book was found
+    if not book:
+        return "Book not found", 404
+
+    # Generate summary
+    summary = generate_book_summary(book['title'], book['author'], book.get('description', ""))
+    return jsonify(book=book, summary=summary)
 
 # Call this function when your app starts
 if __name__ == '__main__':

@@ -8,7 +8,9 @@
 		<h2>Dashboard</h2>
           <div class="col-md-12 mb-3">
               <form action="{{ url_for('search_books') }}" method="POST" class="form-inline">
-                  <input type="text" name="search_term" class="form-control mr-2" placeholder="Search for books..." required value="{{ search_term if search_term else '' }}">
+                  <label>
+                      <input type="text" name="search_term" class="form-control mr-2" placeholder="Search for books..." required value="{{ search_term if search_term else '' }}">
+                  </label>
                   <button type="submit" class="btn btn-primary">Search</button>
               </form>
           </div>
@@ -18,13 +20,15 @@
                   <tr>
                       <th>Title</th>
                       <th>Author</th>
+                      <th>Description</th>
                   </tr>
                   </thead>
                   <tbody>
                   {% for book in search_results %}
                       <tr>
-                          <td>{{ book.title }}</td>
+                          <td><a href="#" onclick="showBookDetails('{{ book.id }}', '{{ book.title }}', '{{ book.author }}', '{{ book.image_url }}', '{{ book.description }}');" data-bs-toggle="modal" data-bs-target="#bookDetailModal">{{ book.title }}</a></td>
                           <td>{{ book.author }}</td>
+                          <td>{{ book.description }}</td>
                       </tr>
                   {% endfor %}
                   </tbody>
@@ -77,10 +81,60 @@
                     </div>
                 </div>
             </div>
-        </div>
+              <!-- Book Details Modal -->
+              <div class="modal fade" id="bookDetailModal" tabindex="-1" role="dialog" aria-labelledby="bookDetailModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-lg" role="document">
+                      <div class="modal-content">
+                          <div class="modal-header">
+                              <h5 class="modal-title" id="bookDetailModalLabel">Book Details</h5>
+                              <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                  <span aria-hidden="true">&times;</span>
+                              </button>
+                          </div>
+                          <div class="modal-body">
+                              <h4 id="bookTitle"></h4>
+                              <p><strong>Author:</strong> <span id="bookAuthor"></span></p>
+                              <img id="bookImage" src="" alt="Book Image" class="img-fluid mb-3" style="max-height: 300px;">
+                              <p><strong>Description:</strong> <span id="bookDescription"></span></p>
+                              <p><strong>AI-Generated Summary:</strong> <span id="bookSummary"></span></p>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <script>
+                  function showBookDetails(id, title, author, imageUrl, description) {
+                      // Display initial book details in the modal
+                      document.getElementById('bookTitle').innerText = title;
+                      document.getElementById('bookAuthor').innerText = author;
+                      document.getElementById('bookImage').src = imageUrl || 'default-image.jpg';
+                      document.getElementById('bookDescription').innerText = description;
+
+                      // Fetch book summary and additional details
+                      fetch(`/book_summary/${id}`)
+                          .then(response => response.json())  // Parse response as JSON
+                          .then(data => {
+                              // Check if the response contains the expected data
+                              if (data && data.book && data.summary) {
+                                  // Update the modal with fetched details
+                                  document.getElementById('bookTitle').innerText = data.book.title;
+                                  document.getElementById('bookAuthor').innerText = data.book.author;
+                                  document.getElementById('bookDescription').innerText = data.book.description;
+                                  document.getElementById('bookImage').src = data.book.image_url || 'default-image.jpg';
+                                  document.getElementById('bookSummary').innerText = data.summary;
+                              } else {
+                                  document.getElementById('bookSummary').innerText = 'Summary data is missing.';
+                              }
+                          })
+                          .catch(error => {
+                              console.error('Error fetching summary:', error);
+                              document.getElementById('bookSummary').innerText = 'Unable to generate summary.';
+                          });
+                  }
+              </script>
+          </div>
             <hr>
+          </div>
         </div>
-      </div>     
-    </div>
-  </body>
-</html>
+      </div>
+</body>
