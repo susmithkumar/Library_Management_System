@@ -12,7 +12,7 @@ beautifulsoup4==4.10.0
 Flask-MySQLdb==0.2.0
 Werkzeug==2.0.3
 requests
-openai==0.10.2  # Or the latest version you need
+openai  # Or the latest version you need
 bcrypt==3.2.2
 sentence-transformers
 numpy==1.24.4
@@ -21,6 +21,6 @@ huggingface_hub==0.10.1
 pymysql
 mysql-connector-python
 setuptools==65.5.0
-setuptools-legacy
-setuptools.distutils
+#setuptools-legacy
+#setuptools.distutils
 python-dotenv
