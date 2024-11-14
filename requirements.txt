@@ -20,3 +20,4 @@ scipy==1.10.1
 huggingface_hub==0.10.1
 pymysql
 mysql-connector-python
+setuptools==65.5.0 setuptools-legacy
