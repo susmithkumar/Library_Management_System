@@ -12,7 +12,8 @@ beautifulsoup4==4.10.0
 Flask-MySQLdb==0.2.0
 Werkzeug==2.0.3
 requests
+openai==0.10.2  # Or the latest version you need
 bcrypt==3.2.2
 sentence-transformers==2.2.2
-scipy==1.9.1
+scipy==1.9.1  # Or a compatible pre-built version
 numpy==1.21.6
