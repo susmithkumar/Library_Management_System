@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS book_issues (
         return_date DATE,
         FOREIGN KEY (user_id) REFERENCES user_table(id),
         FOREIGN KEY (book_id) REFERENCES add_book(id)
-)
+);
 
 INSERT IGNORE INTO roles (id, name, description) VALUES 
 (1, 'Admin', 'have all accesses'),
