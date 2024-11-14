@@ -8,7 +8,7 @@ openai.api_key = ""
 
 
 # Connect to the database
-engine = create_engine("mysql+mysqlconnector://root:W7301%40jqir%23@localhost/library_management_system")
+engine = create_engine("mysql+mysqlconnector://root:W7301%40jqir%23@127.0.0.1:3306/library_management_system")
 
 def generate_embeddings(text_input):
     if not isinstance(text_input, str):
