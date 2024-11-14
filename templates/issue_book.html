@@ -1,13 +1,61 @@
-{% extends 'layout.html' %}
-{% block content %}
-<h2>Issue Book</h2>
-<form method="POST">
-    <select name="book_id" required>
-        {% for book in books %}
-            <option value="{{ book.id }}">{{ book.title }}</option>
-        {% endfor %}
-    </select>
-    <input type="date" name="issue_date" required>
-    <button type="submit">Issue Book</button>
-</form>
-{% endblock %}
+{% include 'header.html' %}
+<body>
+  <div class="container-fluid" id="main">
+    {% include 'top_menus.html' %}
+    <div class="row row-offcanvas row-offcanvas-left">
+      {% include 'left_menus.html' %}
+      <div class="col-md-9 col-lg-10 main">
+        
+        <!-- Page Header -->
+        <h2 class="mb-4">Issue Book</h2>
+        
+        <!-- Flash Message for Feedback -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="alert alert-info">
+              {{ messages[0] }}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
+        <!-- Book Issue Form -->
+        <div class="card">
+          <div class="card-body">
+            <form action="{{ url_for('issue_book') }}" method="POST">
+              
+              <!-- User Selection -->
+              <div class="form-group">
+                <label for="user_id">Select User:</label>
+                <select name="user_id" id="user_id" class="form-control select2" required>
+                  <option value="">-- Select User --</option>
+                  {% for user in users %}
+                    <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }} (ID: {{ user.userid }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+              
+              <!-- Book Selection -->
+              <div class="form-group">
+                <label for="book_id">Select Book:</label>
+                <select name="book_id" id="book_id" class="form-control select2" required>
+                  <option value="">-- Select Book --</option>
+                  {% for book in books %}
+                    <option value="{{ book.id }}">{{ book.title }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              
+              <!-- Issue Date Input -->
+              <div class="form-group">
+                <label for="issue_date">Issue Date:</label>
+                <input type="date" name="issue_date" id="issue_date" class="form-control" required>
+              </div>
+              
+              <!-- Submit Button -->
+              <button type="submit" class="btn btn-primary mt-3">Issue Book</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

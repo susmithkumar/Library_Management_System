@@ -661,7 +661,7 @@ def issue_book():
             return redirect(url_for('issue_book'))
         
         # Fetch users and available books for the form
-        cursor.execute('SELECT id, first_name, last_name FROM user_table')
+        cursor.execute('SELECT id, first_name, last_name ,userid FROM user_table')
         users = cursor.fetchall()
         cursor.execute('SELECT id, title FROM add_book WHERE quantity > 0')
         books = cursor.fetchall()
