@@ -50,7 +50,8 @@ def create_schema():
         except mysql.connection.Error as err:
             print("Failed creating schema: {}".format(err))
         finally:
-            cursor.close()
+            if 'cursor' in locals():  # Ensure cursor exists before closing
+                cursor.close()
 
 
 @app.route('/')
