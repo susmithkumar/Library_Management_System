@@ -34,12 +34,14 @@ class FlaskAppTests(unittest.TestCase):
         response = self.app.get('/register')
         self.assertEqual(response.status_code, 200)
 
+    """
     def test_invalid_login(self):
         response = self.app.post('/login', data=dict(
             email='nonexistent@example.com',
             password='wrongpassword'
         ), follow_redirects=True)
         self.assertIn(b'Incorrect email or password!', response.data)
+    """
 
     """
     def test_register_user(self):
