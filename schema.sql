@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS book_issues (
         book_id INT,
         issue_date DATE,
         return_date DATE,
+        is_returned BOOLEAN DEFAULT TRUE,
         FOREIGN KEY (user_id) REFERENCES user_table(id),
         FOREIGN KEY (book_id) REFERENCES add_book(id)
 );
