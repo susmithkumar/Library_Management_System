@@ -14,8 +14,8 @@ jobs:
       mysql:
         image: mysql:5.7
         env:
-          MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: library_db
+          MYSQL_ROOT_PASSWORD: W7301@jqir#
+          MYSQL_DATABASE: library_management_system
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
@@ -41,8 +41,8 @@ jobs:
       env:
         MYSQL_HOST: 127.0.0.1
         MYSQL_USER: root
-        MYSQL_PASSWORD: rootpassword
-        MYSQL_DB: library_db
+        MYSQL_PASSWORD: W7301@jqir#
+        MYSQL_DB: library_management_system
       run: |
         python -m unittest discover tests
 
