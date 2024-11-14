@@ -9,14 +9,17 @@ import json
 import numpy as np
 from werkzeug.utils import secure_filename
 from scipy.spatial.distance import cosine
-
+from dotenv import load_dotenv
 
 
 app = Flask(__name__)
 model = SentenceTransformer('all-MiniLM-L6-v2')
 engine = create_engine("mysql+pymysql://root:W7301%40jqir%23@localhost/library_management_system")
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
-openai.api_key = os.getenv("OPENAI_API_KEY")
+
+load_dotenv()
+
+openai.api_key = ""
 
 # Set the upload folder
 app.config['UPLOAD_FOLDER'] = 'static/uploads'

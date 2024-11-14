@@ -21,7 +21,9 @@ CREATE TABLE IF NOT EXISTS add_book (
     author VARCHAR(255) NOT NULL,
     rack VARCHAR(50),
     quantity INT,
-    isbn VARCHAR(50)  
+    embedding JSON,
+    isbn VARCHAR(50),
+    image_url VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS roles (
