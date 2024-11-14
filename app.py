@@ -72,7 +72,7 @@ def login():
         password = request.form['password'].encode('utf-8')
         print("Executing query: SELECT * FROM user_table WHERE email = %s", (email,))
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM user_table WHERE email = %s', (email,))
+        cursor.execute('SELECT * FROM user_table WHERE email = %s AND active = 1', (email,))
         user = cursor.fetchone()
         if user and bcrypt.checkpw(password, user['password'].encode('utf-8')):
             session['loggedin'] = True
@@ -517,6 +517,13 @@ def add_book():
             rack = request.form['rack']
             quantity = request.form['quantity']
 
+            text_input = f"{title} {author}"
+            embedding = generate_embeddings(text_input)
+
+            # Convert the embedding list to JSON (an array in JSON format)
+            embedding_json = json.dumps(embedding)
+
+
             # Handle file upload
             image_file = request.files['image']
             if image_file and image_file.filename != '':
@@ -530,8 +537,8 @@ def add_book():
 
             # Insert book data into the database
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('INSERT INTO add_book (title, author, rack, quantity, image_url) VALUES (%s, %s, %s, %s, %s)',
-                           (title, author, rack, quantity, image_url))
+            cursor.execute('INSERT INTO add_book (title, author, rack, quantity, image_url, embedding) VALUES (%s, %s, %s, %s, %s, %s)',
+                           (title, author, rack, quantity, image_url, embedding_json))
             mysql.connection.commit()
             # Get the ID of the newly inserted user
             new_user_id = cursor.lastrowid
@@ -550,6 +557,15 @@ def add_book():
             mesage = 'Please fill out this form!'
             return render_template('add_book.html', mesage=mesage)
     return redirect(url_for('login'))
+
+
+def generate_embeddings(text_input):
+    if not isinstance(text_input, str):
+        raise ValueError("Expected a string for text_input, got a non-string type.")
+
+    response = openai.Embedding.create(input=text_input, model="text-embedding-ada-002")
+    return response['data'][0]['embedding']
+
 
 # View Books Route
 @app.route('/books', methods=['GET'])

@@ -1,140 +1,139 @@
 {% include 'header.html' %}
 <body>
-  <div class="container-fluid" id="main">
-  {% include 'top_menus.html' %}  	
+<div class="container-fluid" id="main">
+    {% include 'top_menus.html' %}
     <div class="row row-offcanvas row-offcanvas-left">
-      {% include 'left_menus.html' %}
-      <div class="col-md-9 col-lg-10 main"> 
-		<h2>Dashboard</h2>
-          <div class="col-md-12 mb-3">
-              <form action="{{ url_for('search_books') }}" method="POST" class="form-inline">
-                  <label>
-                      <input type="text" name="search_term" class="form-control mr-2" placeholder="Search for books..." required value="{{ search_term if search_term else '' }}">
-                  </label>
-                  <button type="submit" class="btn btn-primary">Search</button>
-              </form>
-          </div>
-          {% if search_results %}
-              <table class="table table-striped">
-                  <thead>
-                  <tr>
-                      <th>Title</th>
-                      <th>Author</th>
-                      <th>Description</th>
-                  </tr>
-                  </thead>
-                  <tbody>
-                  {% for book in search_results %}
-                      <tr>
-                          <td><a href="#" onclick="showBookDetails('{{ book.id }}', '{{ book.title }}', '{{ book.author }}', '{{ book.image_url }}', '{{ book.description }}');" data-bs-toggle="modal" data-bs-target="#bookDetailModal">{{ book.title }}</a></td>
-                          <td>{{ book.author }}</td>
-                          <td>{{ book.description }}</td>
-                      </tr>
-                  {% endfor %}
-                  </tbody>
-              </table>
-          {% else %}
-              <p>No books found.</p>
-          {% endif %}
-          <div class="row mb-3">
-            <div class="col-xl-3 col-lg-6">
-                <div class="card card-inverse card-success">
-                    <div class="card-block bg-success">
-                        <div class="rotate">
-                            <i class="fa fa-book fa-5x"></i>
-                        </div>
-                        <h6 class="text-uppercase">Total Books</h6>
-                        <h1 class="display-1">{{ total_books }}</h1>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-lg-6">
-                <div class="card card-inverse card-info">
-                    <div class="card-block bg-info">
-                        <div class="rotate">
-                            <i class="fa fa-list fa-4x"></i>
-                        </div>
-                        <h6 class="text-uppercase">Available Books</h6>
-                        <h1 class="display-1">{{ available_books }}</h1>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-lg-6">
-                <div class="card card-inverse card-warning">
-                    <div class="card-block bg-warning">
-                        <div class="rotate">
-                            <i class="fa fa-share fa-5x"></i>
-                        </div>
-                        <h6 class="text-uppercase">Issued Books</h6>
-                        <h1 class="display-1">{{ issued_books }}</h1>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-lg-6">
-                <div class="card card-inverse card-danger">
-                    <div class="card-block bg-danger">
-                        <div class="rotate">
-                            <i class="fa fa-undo fa-4x"></i>
-                        </div>
-                        <h6 class="text-uppercase">Returned Books</h6>
-                        <h1 class="display-1">{{ returned_books }}</h1>
-                    </div>
-                </div>
-            </div>
-              <!-- Book Details Modal -->
-              <div class="modal fade" id="bookDetailModal" tabindex="-1" role="dialog" aria-labelledby="bookDetailModalLabel" aria-hidden="true">
-                  <div class="modal-dialog modal-lg" role="document">
-                      <div class="modal-content">
-                          <div class="modal-header">
-                              <h5 class="modal-title" id="bookDetailModalLabel">Book Details</h5>
-                              <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                  <span aria-hidden="true">&times;</span>
-                              </button>
-                          </div>
-                          <div class="modal-body">
-                              <h4 id="bookTitle"></h4>
-                              <p><strong>Author:</strong> <span id="bookAuthor"></span></p>
-                              <img id="bookImage" src="" alt="Book Image" class="img-fluid mb-3" style="max-height: 300px;">
-                              <p><strong>Description:</strong> <span id="bookDescription"></span></p>
-                              <p><strong>AI-Generated Summary:</strong> <span id="bookSummary"></span></p>
-                          </div>
-                      </div>
-                  </div>
-              </div>
+        {% include 'left_menus.html' %}
 
-              <script>
-                  function showBookDetails(id, title, author, imageUrl, description) {
-                      // Display initial book details in the modal
-                      document.getElementById('bookTitle').innerText = title;
-                      document.getElementById('bookAuthor').innerText = author;
-                      document.getElementById('bookImage').src = imageUrl || 'default-image.jpg';
-                      document.getElementById('bookDescription').innerText = description;
+        <div class="col-md-9 col-lg-10 main">
+            <h2 class="my-4">Dashboard</h2>
 
-                      // Fetch book summary and additional details
-                      fetch(`/book_summary/${id}`)
-                          .then(response => response.json())  // Parse response as JSON
-                          .then(data => {
-                              // Check if the response contains the expected data
-                              if (data && data.book && data.summary) {
-                                  // Update the modal with fetched details
-                                  document.getElementById('bookTitle').innerText = data.book.title;
-                                  document.getElementById('bookAuthor').innerText = data.book.author;
-                                  document.getElementById('bookDescription').innerText = data.book.description;
-                                  document.getElementById('bookImage').src = data.book.image_url || 'default-image.jpg';
-                                  document.getElementById('bookSummary').innerText = data.summary;
-                              } else {
-                                  document.getElementById('bookSummary').innerText = 'Summary data is missing.';
-                              }
-                          })
-                          .catch(error => {
-                              console.error('Error fetching summary:', error);
-                              document.getElementById('bookSummary').innerText = 'Unable to generate summary.';
-                          });
-                  }
-              </script>
-          </div>
-            <hr>
-          </div>
+            <!-- Search Bar -->
+            <div class="col-md-12 mb-4">
+                <form action="{{ url_for('search_books') }}" method="POST" class="d-flex justify-content-start align-items-center">
+                    <input type="text" name="search_term" class="form-control me-2" placeholder="Search for books..." required value="{{ search_term if search_term else '' }}">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+            </div>
+
+            <!-- Search Results -->
+            {% if search_results %}
+                <table class="table table-hover table-bordered">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Description</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for book in search_results %}
+                        <tr>
+                            <td>
+                                <a href="#" onclick="showBookDetails('{{ book.id }}', '{{ book.title }}', '{{ book.author }}', '{{ book.image_url }}', '{{ book.description }}');" data-bs-toggle="modal" data-bs-target="#bookDetailModal">
+                                    {{ book.title }}
+                                </a>
+                            </td>
+                            <td>{{ book.author }}</td>
+                            <td>{{ book.description }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-muted text-center">No books found.</p>
+            {% endif %}
+
+            <!-- Stats Cards -->
+            <div class="row g-3 mb-4 text-center">
+                <div class="col-lg-3 col-md-6">
+                    <div class="card bg-success text-white shadow-sm">
+                        <div class="card-body">
+                            <i class="fa fa-book fa-3x mb-2"></i>
+                            <h5 class="card-title">Total Books</h5>
+                            <p class="card-text display-4">{{ total_books }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card bg-info text-white shadow-sm">
+                        <div class="card-body">
+                            <i class="fa fa-list fa-3x mb-2"></i>
+                            <h5 class="card-title">Available Books</h5>
+                            <p class="card-text display-4">{{ available_books }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card bg-warning text-white shadow-sm">
+                        <div class="card-body">
+                            <i class="fa fa-share fa-3x mb-2"></i>
+                            <h5 class="card-title">Issued Books</h5>
+                            <p class="card-text display-4">{{ issued_books }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card bg-danger text-white shadow-sm">
+                        <div class="card-body">
+                            <i class="fa fa-undo fa-3x mb-2"></i>
+                            <h5 class="card-title">Returned Books</h5>
+                            <p class="card-text display-4">{{ returned_books }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Book Details Modal -->
+            <div class="modal fade" id="bookDetailModal" tabindex="-1" aria-labelledby="bookDetailModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="bookDetailModalLabel">Book Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <h4 id="bookTitle"></h4>
+                            <p><strong>Author:</strong> <span id="bookAuthor"></span></p>
+                            <img id="bookImage" src="" alt="Book Image" class="img-fluid mb-3" style="max-height: 300px;">
+                            <p><strong>Description:</strong> <span id="bookDescription"></span></p>
+                            <p><strong>AI-Generated Summary:</strong> <span id="bookSummary"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JavaScript for Book Modal -->
+            <script>
+                function showBookDetails(id, title, author, imageUrl, description) {
+                    // Set initial book details in the modal
+                    document.getElementById('bookTitle').innerText = title;
+                    document.getElementById('bookAuthor').innerText = author;
+                    document.getElementById('bookImage').src = imageUrl || '/static/images/default-image.jpg';
+                    document.getElementById('bookDescription').innerText = description;
+                    document.getElementById('bookSummary').innerText = 'Loading summary...';
+
+                    // Fetch additional book details and summary
+                    fetch(`/book_summary/${id}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data && data.book && data.summary) {
+                                document.getElementById('bookTitle').innerText = data.book.title;
+                                document.getElementById('bookAuthor').innerText = data.book.author;
+                                document.getElementById('bookImage').src = data.book.image_url || '/static/images/default-image.jpg';
+                                document.getElementById('bookDescription').innerText = data.book.description;
+                                document.getElementById('bookSummary').innerText = data.summary;
+                            } else {
+                                document.getElementById('bookSummary').innerText = 'Summary data is missing.';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching summary:', error);
+                            document.getElementById('bookSummary').innerText = 'Unable to generate summary.';
+                        });
+                }
+            </script>
         </div>
-      </div>
+    </div>
+</div>
 </body>
