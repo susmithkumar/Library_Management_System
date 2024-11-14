@@ -35,7 +35,7 @@ jobs:
     
     - name: Set up database schema
       run: |
-        mysql -h127.0.0.1 -uroot -pW7301@jqir# library_db < schema.sql
+        mysql -h127.0.0.1 -uroot -pW7301@jqir# library_management_system < schema.sql
     
     - name: Run tests
       env:
