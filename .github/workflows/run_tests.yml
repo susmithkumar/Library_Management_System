@@ -14,8 +14,8 @@ jobs:
       mysql:
         image: mysql:5.7
         env:
-          MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: testdb
+          MYSQL_ROOT_PASSWORD: W7301@jqir#
+          MYSQL_DATABASE: library_management_system
         ports:
           - 3306:3306
 
