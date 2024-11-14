@@ -20,6 +20,13 @@ class PytestTestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     # Create a test suite combining all test cases
+
+    os.environ['MYSQL_HOST'] = '127.0.0.1'
+    os.environ['MYSQL_USER'] = 'root'
+    os.environ['MYSQL_PASSWORD'] = 'W7301@jqir#'
+    os.environ['MYSQL_DB'] = 'library_management_system'
+    os.environ['MYSQL_PORT'] = '3306'
+
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(TestUserTemplates))
     test_suite.addTest(unittest.makeSuite(TestBookTemplates))

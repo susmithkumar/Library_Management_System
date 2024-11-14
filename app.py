@@ -14,6 +14,8 @@ app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'W7301@jqir#'
 app.config['MYSQL_DB'] = 'library_management_system'
 
+app.config['MYSQL_PORT'] = int('3306')
+
 # Initialize MySQL
 mysql = MySQL(app)
 
