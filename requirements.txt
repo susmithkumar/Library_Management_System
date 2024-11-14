@@ -22,5 +22,4 @@ pymysql
 mysql-connector-python
 setuptools==65.5.0
 setuptools-legacy
-setuptools
 setuptools.distutils
