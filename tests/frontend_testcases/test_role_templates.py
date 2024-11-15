@@ -16,7 +16,7 @@ class TestRoleTemplates(TestCase):
     def test_roles_template(self):
         response = self.client.get('/roles')
         self.assert200(response)
-        self.assert_template_used('roles.html')
+        self.assert_template_used('templates/roles.html')
 
         soup = BeautifulSoup(response.data, 'html.parser')
         

@@ -13,7 +13,7 @@ class TestAuthTemplates(TestCase):
     def test_login_template(self):
         response = self.client.get('/login')
         self.assert200(response)
-        self.assert_template_used('login.html')
+        self.assert_template_used('templates/login.html')
 
         soup = BeautifulSoup(response.data, 'html.parser')
         form = soup.find('form')
@@ -30,7 +30,7 @@ class TestAuthTemplates(TestCase):
     def test_register_template(self):
         response = self.client.get('/register')
         self.assert200(response)
-        self.assert_template_used('register.html')
+        self.assert_template_used('templates/register.html')
 
         soup = BeautifulSoup(response.data, 'html.parser')
         form = soup.find('form')
