@@ -1,4 +1,4 @@
-name: Run Tests
+name: Library Management System CI/CD
 
 on:
   push:
@@ -10,30 +10,55 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: W7301@jqir#
+          MYSQL_DATABASE: library_management_system
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     steps:
     - uses: actions/checkout@v4
-
+    
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.x'
-
+        python-version: '3.9'
+    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-
-    - name: Run frontend testcases
+    
+    - name: Set up database schema
       run: |
-        python -m unittest discover frontend_testcases
+        mysql -h127.0.0.1 -uroot -pW7301@jqir# library_management_system < schema.sql
 
-    - name: Run run_tests.py
-      run: python run_tests.py
 
-    - name: Run test_app.py
-      run: python -m unittest test_app.py
-
-    - name: Run Flask tests
+    
+    - name: Run tests
+      env:
+        MYSQL_HOST: 127.0.0.1
+        MYSQL_USER: root
+        MYSQL_PASSWORD: W7301@jqir#
+        MYSQL_DB: library_management_system
       run: |
-        pip install flask-unittest
-        python -m unittest discover -v -s . -p '*_test.py'
+        pytest tests/test1_app.py
+        pytest tests
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      # Add your deployment steps here
+      run: |
+        echo "Deploying to production"
+        # Add actual deployment commands
