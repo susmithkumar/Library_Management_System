@@ -13,6 +13,7 @@
                 
                 <th>Book Title</th>
                 <th>Issue Date</th>
+                <th>Issued User</th>
               </tr>
             </thead>
             <tbody>
@@ -21,6 +22,7 @@
                   
                   <td>{{ book.title }}</td>
                   <td>{{ book.issue_date }}</td>
+                  <td>{{ book.first_name }}</td>
                 </tr>
               {% endfor %}
             </tbody>

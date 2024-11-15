@@ -9,15 +9,6 @@
         <!-- Page Header -->
         <h2 class="mb-4">Issue Book</h2>
         
-        <!-- Flash Message for Feedback -->
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            <div class="alert alert-info">
-              {{ messages[0] }}
-            </div>
-          {% endif %}
-        {% endwith %}
-        
         <!-- Book Issue Form -->
         <div class="card">
           <div class="card-body">

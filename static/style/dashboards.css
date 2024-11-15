@@ -143,3 +143,11 @@ body {
   font-size: 1.5rem; /* Adjust icon size */
   color: #ffffff;    /* Change color if needed */
 }
+
+.form-control.select2 option {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%; /* Ensures options fit within the dropdown box */
+  display: inline-block; /* Allows ellipsis to work */
+}

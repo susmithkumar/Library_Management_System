@@ -24,3 +24,4 @@ setuptools==65.5.0
 setuptools-legacy
 setuptools.distutils
 python-dotenv
+pandas
