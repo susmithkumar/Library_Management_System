@@ -46,7 +46,7 @@ jobs:
         MYSQL_PASSWORD: W7301@jqir#
         MYSQL_DB: library_management_system
       run: |
-        
+        pytest tests/test1_app.py
         pytest tests
 
   deploy:
