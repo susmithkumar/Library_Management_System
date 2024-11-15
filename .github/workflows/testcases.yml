@@ -2,9 +2,9 @@ name: Library Management System CI/CD
 
 on:
   push:
-    branches: [ issueBook ]
+    branches: [ fixes/minorbugs ]
   pull_request:
-    branches: [ issueBook ]
+    branches: [ fixes/minorbugs ]
 
 jobs:
   test:
