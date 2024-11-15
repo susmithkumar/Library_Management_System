@@ -19,7 +19,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 
 load_dotenv()
 
-openai.api_key = ""
+openai.api_key = "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"
 
 # Set the upload folder
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -37,6 +37,11 @@ app.config['MYSQL_PASSWORD'] = 'W7301@jqir#'
 app.config['MYSQL_DB'] = 'library_management_system'
 # Initialize MySQL
 mysql = MySQL(app)
+
+def create_app():
+    app = Flask(__name__)
+    # Configure your app here
+    return app
 
 def create_schema():
     with app.app_context():

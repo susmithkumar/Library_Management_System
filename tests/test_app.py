@@ -3,13 +3,14 @@ import os
 import sys
 
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from app import app
 
-from app import app, mysql
-import json
 
 class FlaskAppTests(unittest.TestCase):
 
     def setUp(self):
+        
         self.app = app.test_client()
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False

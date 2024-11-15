@@ -5,8 +5,9 @@ import sys
 
 
 
-from app import app, mysql
-import unittest
+from app import create_app
+
+app = create_app()
 
 
 @pytest.fixture
@@ -14,16 +15,16 @@ def client():
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
     app.config['SECRET_KEY'] = 'test_secret_key'
-    app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', '127.0.0.1')
-    app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'root')
-    app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', 'W7301@jqir#')
-    app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'library_management_system')
-    app.config['MYSQL_PORT'] = int(os.environ.get('MYSQL_PORT', 3306))
+
     
     with app.test_client() as client:
         with app.app_context():
             # Set up any required database state here
-            pass
+                app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', '127.0.0.1')
+                app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'root')
+                app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', 'W7301@jqir#')
+                app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'library_management_system')
+                app.config['MYSQL_PORT'] = int(os.environ.get('MYSQL_PORT', 3306))
         yield client
 
 def login(client, email, password):
