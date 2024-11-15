@@ -8,7 +8,7 @@ class TestCommonTemplates(unittest.TestCase):
         self.templates_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
 
     def test_left_menus_template(self):
-        with open(os.path.join(self.templates_dir, 'left_menus.html'), 'r') as file:
+        with open(os.path.join('templates/left_menus.html'), 'r') as file:
             content = file.read()
         
         soup = BeautifulSoup(content, 'html.parser')

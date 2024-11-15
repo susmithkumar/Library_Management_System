@@ -51,6 +51,8 @@ jobs:
         MYSQL_DB: library_management_system
       run: |
         python -m unittest discover run_tests.py
+        pytest tests/test1_app.py
+        pytest tests/test_app.py
 
   deploy:
     needs: test

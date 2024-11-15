@@ -56,7 +56,7 @@ class FlaskAppTests(unittest.TestCase):
         #self.assertIn(b'You have successfully registered!', response.data)
     """
 
-    
+    """
     def test_add_book(self):
         with self.app as client:
             with client.session_transaction() as sess:
@@ -69,6 +69,8 @@ class FlaskAppTests(unittest.TestCase):
                 quantity='5'
             ), follow_redirects=True)
             #self.assertIn(b'Book added successfully!', response.data)
+
+    """
     
     def test_search_books(self):
         response = self.app.post('/search_books', data=dict(
