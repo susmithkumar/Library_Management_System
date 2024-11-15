@@ -50,7 +50,7 @@ jobs:
         MYSQL_PASSWORD: W7301@jqir#
         MYSQL_DB: library_management_system
       run: |
-        python -m unittest discover tests
+        python -m unittest discover run_tests.py
 
   deploy:
     needs: test

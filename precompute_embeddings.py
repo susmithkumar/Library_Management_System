@@ -4,7 +4,7 @@ from sqlalchemy import create_engine ,text
 import json
 
 # Ensure openai.api_key is set
-openai.api_key = ""
+openai.api_key = "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"
 
 
 # Connect to the database
