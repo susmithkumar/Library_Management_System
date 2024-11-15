@@ -21,6 +21,6 @@ huggingface_hub==0.10.1
 pymysql
 mysql-connector-python
 setuptools==65.5.0
-#setuptools-legacy
-#setuptools.distutils
+setuptools-legacy
+setuptools.distutils
 python-dotenv
