@@ -19,7 +19,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 
 load_dotenv()
 
-openai.api_key = ""
+openai.api_key = "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"
 
 # Set the upload folder
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -66,11 +66,9 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     session.clear()
-    mesage = None
     if request.method == 'POST' and 'email' in request.form and 'password' in request.form:
         email = request.form['email']
         password = request.form['password'].encode('utf-8')
-        print("Executing query: SELECT * FROM user_table WHERE email = %s", (email,))
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM user_table WHERE email = %s AND active = 1', (email,))
         user = cursor.fetchone()
@@ -99,11 +97,11 @@ def login():
             # Store the responsibilities (menu links) in the session for use in the left menu
             session['responsibilities'] = cursor.fetchall()
             
-            mesage = 'Logged in successfully !'
+            flash("Logged in successfully !", "success")
             return redirect(url_for('dashboard'))
         else:
-            mesage = 'Incorrect email or password!'
-    return render_template('login.html', mesage=mesage)
+            flash("Incorrect email or password!", "danger")
+    return render_template('login.html')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
@@ -189,7 +187,7 @@ def logout():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    mesage = ''
+
     if request.method == 'POST' and 'name' in request.form and 'password' in request.form and 'email' in request.form:
         userName = request.form['name']
         password = request.form['password']
@@ -204,16 +202,16 @@ def register():
         account = cursor.fetchone()
 
         if account:
-            mesage = 'Account already exists!'
+            flash("Account already exists!", "danger")
         elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
-            mesage = 'Invalid email address!'
+            flash("Invalid email address!", "danger")
         elif not userName or not password or not email:
-            mesage = 'Please fill out the form!'
+            flash("Please fill out the form!", "danger")
         else:
             cursor.execute('INSERT INTO user_table (first_name, email, password,address, role,last_name) VALUES (%s, %s,%s, %s, %s, %s)', 
                            (userName, email, hashed_password, address, role, last_name))
             mysql.connection.commit()
-            mesage = 'You have successfully registered!'
+            flash("You have successfully registered!", "success")
 
             # Get the latest `sno` for unique userid generation
             userid = cursor.lastrowid
@@ -221,8 +219,8 @@ def register():
             cursor.execute('UPDATE user_table SET userid = %s WHERE id = %s', (sno, userid))
             mysql.connection.commit()
     elif request.method == 'POST':
-        mesage = 'Please fill out the form!'
-    return render_template('register.html', mesage=mesage)
+        flash("'Please fill out the form!", "danger")
+    return render_template('register.html')
 
 
 
@@ -264,7 +262,7 @@ def user_roles():
 #chnages strted by vinod
 @app.route("/save_user", methods=['GET', 'POST'])
 def save_user():
-    mesage = ''
+    
     if 'loggedin' in session:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         if request.method == 'POST' and 'first_name' in request.form and 'last_name' in request.form and 'email' in request.form:
@@ -300,8 +298,8 @@ def password_change():
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             cursor.execute('UPDATE user_table SET password=%s WHERE id = %s', (hashed_password,session['user_id'], ))  # Changed to user_table
             mysql.connection.commit()
-            mesage="password updated successfully please login again"
-            return render_template('login.html', mesage=mesage)
+            flash("password updated successfully please login again", "success")
+            return render_template('login.html')
         else:
             return render_template("password_change.html")
     return redirect(url_for('login'))
@@ -320,198 +318,233 @@ def view_user():
 
 @app.route('/add_role', methods=['GET', 'POST'])
 def add_role():
-    mesage = ''
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    if 'loggedin' in session:  # Ensure the user is logged in
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    # Fetch all responsibilities to display in the form
-    cursor.execute("SELECT * FROM responsibilities")
-    all_responsibilities = cursor.fetchall()
+        # Fetch all responsibilities to display in the form
+        cursor.execute("SELECT * FROM responsibilities")
+        all_responsibilities = cursor.fetchall()
 
-    if request.method == 'POST':
-        role_name = request.form.get('role')
-        role_description = request.form.get('description')
-        selected_responsibilities = request.form.getlist('responsibilities')  # List of selected responsibility IDs
+        if request.method == 'POST':
+            role_name = request.form.get('role')
+            role_description = request.form.get('description')
+            selected_responsibilities = request.form.getlist('responsibilities')  # List of selected responsibility IDs
 
-        if not role_name:
-            message = "Role name is required!", "danger"
-            return render_template('add_role.html', all_responsibilities=all_responsibilities)
+            if not role_name:
+                flash("Role name is required!", "danger")
+                return render_template('add_role.html', all_responsibilities=all_responsibilities)
 
 
-        cursor.execute("""CREATE TABLE IF NOT EXISTS roles (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(100) NOT NULL,
-        description TEXT)""")
-        # Insert the new role into the roles table
-        cursor.execute("""INSERT INTO roles (name, description) VALUES (%s, %s)""", (role_name, role_description))
+            cursor.execute("""CREATE TABLE IF NOT EXISTS roles (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(100) NOT NULL,
+            description TEXT)""")
+            # Insert the new role into the roles table
+            cursor.execute("""INSERT INTO roles (name, description) VALUES (%s, %s)""", (role_name, role_description))
 
-        # Fetch the newly created role's ID
-        role_id = cursor.lastrowid
+            # Fetch the newly created role's ID
+            role_id = cursor.lastrowid
 
-        # Insert selected responsibilities into the roles_responsibilities table
-        for responsibility_id in selected_responsibilities:
-            cursor.execute("""
-                INSERT INTO roles_responsibilities (role_id, responsibility_id) 
-                VALUES (%s, %s)
-            """, (role_id, responsibility_id))
+            # Insert selected responsibilities into the roles_responsibilities table
+            for responsibility_id in selected_responsibilities:
+                cursor.execute("""
+                    INSERT INTO roles_responsibilities (role_id, responsibility_id) 
+                    VALUES (%s, %s)
+                """, (role_id, responsibility_id))
 
-        mysql.connection.commit()
-        message = f"Role '{role_name}' added successfully!", "success"
-        return redirect(url_for('roles'))
+            mysql.connection.commit()
+            flash("Role '{role_name}' added successfully!", "success")
+            return redirect(url_for('roles'))
 
-    return render_template('add_role.html', all_responsibilities=all_responsibilities)
+        return render_template('add_role.html', all_responsibilities=all_responsibilities)
+    return redirect(url_for('login'))
+
 
 @app.route('/edit_role/<int:role_id>', methods=['GET', 'POST'])
 def edit_role(role_id):
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    if 'loggedin' in session:  # Ensure the user is logged in
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    # Fetch the current role details
-    cursor.execute("SELECT * FROM roles WHERE id = %s", (role_id,))
-    role = cursor.fetchone()
+        # Fetch the current role details
+        cursor.execute("SELECT * FROM roles WHERE id = %s", (role_id,))
+        role = cursor.fetchone()
 
-    # Fetch all responsibilities
-    cursor.execute("SELECT * FROM responsibilities")
-    all_responsibilities = cursor.fetchall()
+        # Fetch all responsibilities
+        cursor.execute("SELECT * FROM responsibilities")
+        all_responsibilities = cursor.fetchall()
 
-    # Fetch current responsibilities for this role
-    cursor.execute("SELECT responsibility_id FROM roles_responsibilities WHERE role_id = %s", (role_id,))
-    current_responsibilities = [row['responsibility_id'] for row in cursor.fetchall()]
+        # Fetch current responsibilities for this role
+        cursor.execute("SELECT responsibility_id FROM roles_responsibilities WHERE role_id = %s", (role_id,))
+        current_responsibilities = [row['responsibility_id'] for row in cursor.fetchall()]
 
-    if request.method == 'POST':
-        role_name = request.form.get('name')
-        role_description = request.form.get('description')
-        selected_responsibilities = request.form.getlist('responsibilities')  # List of selected responsibilities (ids)
+        if request.method == 'POST':
+            role_name = request.form.get('name')
+            role_description = request.form.get('description')
+            selected_responsibilities = request.form.getlist('responsibilities')  # List of selected responsibilities (ids)
 
-        if not role_name:
-            mesage = "Role name is required!", "danger"
-            return redirect(url_for('edit_role', role_id=role_id))
+            if not role_name:
+                flash("Role name is required!", "danger")
+                return redirect(url_for('edit_role', role_id=role_id))
 
-        # Update the role's name and description
-        cursor.execute("""
-                UPDATE roles SET name = %s, description = %s WHERE id = %s""", (role_name, role_description, role_id))
+            # Update the role's name and description
+            cursor.execute("""
+                    UPDATE roles SET name = %s, description = %s WHERE id = %s""", (role_name, role_description, role_id))
 
-        # Clear existing responsibilities
-        cursor.execute("DELETE FROM roles_responsibilities WHERE role_id = %s", (role_id,))
+            # Clear existing responsibilities
+            cursor.execute("DELETE FROM roles_responsibilities WHERE role_id = %s", (role_id,))
 
-        # Insert new responsibilities
-        for responsibility_id in selected_responsibilities:
-            cursor.execute("INSERT INTO roles_responsibilities (role_id, responsibility_id) VALUES (%s, %s)", (role_id, responsibility_id))
+            # Insert new responsibilities
+            for responsibility_id in selected_responsibilities:
+                cursor.execute("INSERT INTO roles_responsibilities (role_id, responsibility_id) VALUES (%s, %s)", (role_id, responsibility_id))
 
-        mysql.connection.commit()
-        mesage = f"Role '{role_name}' updated successfully!", "success"
-        return redirect(url_for('roles'))
+            mysql.connection.commit()
+            flash("Role '{role_name}' updated successfully!", "success")
+            return redirect(url_for('roles'))
 
-    return render_template('edit_role.html', role=role, all_responsibilities=all_responsibilities, current_responsibilities=current_responsibilities)
-
+        return render_template('edit_role.html', role=role, all_responsibilities=all_responsibilities, current_responsibilities=current_responsibilities)
+    return redirect(url_for('login'))
 
 @app.route('/roles', methods=['GET'])
 def roles():
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute("""
-         SELECT r.id AS role_id, r.name AS role_name, r.description, 
-               GROUP_CONCAT(res.name SEPARATOR ', ') AS responsibility_names
-        FROM roles r
-        LEFT JOIN roles_responsibilities rr ON r.id = rr.role_id
-        LEFT JOIN responsibilities res ON rr.responsibility_id = res.id
-        GROUP BY r.id, r.name, r.description""",)
-    roles = cursor.fetchall()
-    print(roles)
-    return render_template('roles.html', roles=roles)
+    
+    if 'loggedin' in session:  # Ensure the user is logged in
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("""
+            SELECT r.id AS role_id, r.name AS role_name, r.description, 
+                GROUP_CONCAT(res.name SEPARATOR ', ') AS responsibility_names
+            FROM roles r
+            LEFT JOIN roles_responsibilities rr ON r.id = rr.role_id
+            LEFT JOIN responsibilities res ON rr.responsibility_id = res.id
+            GROUP BY r.id, r.name, r.description""",)
+        roles = cursor.fetchall()
+        
+        return render_template('roles.html', roles=roles)
+    return redirect(url_for('login'))
+
+
+@app.route('/role_delete/<int:role_id>', methods=['GET'])
+def role_delete(role_id):
+    
+    if 'loggedin' in session:  # Ensure the user is logged in
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        # First, delete entries from the roles_responsibilities table
+        cursor.execute("DELETE FROM roles_responsibilities WHERE role_id = %s", (role_id,))
+        cursor.execute("DELETE FROM roles WHERE id = %s", (role_id,))
+        mysql.connection.commit()
+        flash("Role Deleted updated successfully!", "danger")
+        return redirect(url_for('roles'))
+    return redirect(url_for('login'))
 
 
 @app.route('/add_responsibility', methods=['GET', 'POST'])
 def add_responsibility():
-    mesage = ''
-    if request.method == 'POST' and 'responsibility' in request.form and 'description' in request.form and 'path' in request.form:
-        responsibility_name = request.form.get('responsibility')
-        responsibility_description = request.form.get('description')
-        responsibility_path = request.form.get('path')
+    
+    if 'loggedin' in session:  # Ensure the user is logged in
+    
+        if request.method == 'POST' and 'responsibility' in request.form and 'description' in request.form and 'path' in request.form:
+            responsibility_name = request.form.get('responsibility')
+            responsibility_description = request.form.get('description')
+            responsibility_path = request.form.get('path')
 
-        # Check if the responsibility name is empty
-        if not responsibility_name:
-            mesage = 'Responsibility name is required!'
-            return render_template('add_responsibility.html', mesage=mesage)
+            # Check if the responsibility name is empty
+            if not responsibility_name:
+                flash("Responsibility name is required!", "danger")
+                return render_template('add_responsibility.html')
 
-        # Connect to the database
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            # Connect to the database
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-        # Check if the responsibilities table exists and create it if it doesn't
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS responsibilities (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(100) NOT NULL UNIQUE,
-                description TEXT,
-                path VARCHAR(255)
-            );
-        """)
-        mysql.connection.commit()
-        print("Table successfully created (if it didn't exist).")
+            # Check if the responsibility already exists
+            cursor.execute('SELECT * FROM responsibilities WHERE name = %s', (responsibility_name,))
+            responsibility = cursor.fetchone()
 
-        # Check if the responsibility already exists
-        cursor.execute('SELECT * FROM responsibilities WHERE name = %s', (responsibility_name,))
-        responsibility = cursor.fetchone()
+            if responsibility:
+                flash("Responsibility already exists!", "danger")
+            else:
+                # Insert the new responsibility with the path
+                cursor.execute('INSERT INTO responsibilities (name, description, path) VALUES (%s, %s, %s)',
+                            (responsibility_name, responsibility_description, responsibility_path))
+                mysql.connection.commit()
+                flash("Responsibility Created Successfully", "success")
+            # Close the cursor after usage
+            cursor.close()
 
-        if responsibility:
-            mesage = 'Responsibility already exists!'
-        else:
-            # Insert the new responsibility with the path
-            cursor.execute('INSERT INTO responsibilities (name, description, path) VALUES (%s, %s, %s)',
-                           (responsibility_name, responsibility_description, responsibility_path))
-            mysql.connection.commit()
-            mesage = 'Responsibility created successfully!'
+        elif request.method == 'POST':
+            flash("Please fill out the form!", "danger")
+            # Render the form with a success or error message
+        return render_template('add_responsibility.html')
+    return redirect(url_for('login'))
 
-        # Close the cursor after usage
-        cursor.close()
-
-    elif request.method == 'POST':
-        mesage = 'Please fill out the form!'
-
-    # Render the form with a success or error message
-    return render_template('add_responsibility.html', mesage=mesage)
 
 
 @app.route('/responsibility', methods=['GET'])
 def responsibility():
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM responsibilities')
-    responsibilities = cursor.fetchall()
-    cursor.close()
-    return render_template('responsibility.html', responsibility=responsibilities)
+    
+    if 'loggedin' in session:  # Ensure the user is logged in
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM responsibilities')
+        responsibilities = cursor.fetchall()
+        cursor.close()
+        return render_template('responsibility.html', responsibility=responsibilities)
+    return redirect(url_for('login'))
+
+
 
 @app.route('/edit_responsibility/<int:responsibility_id>', methods=['GET', 'POST'])
 def edit_responsibility(responsibility_id):
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    if 'loggedin' in session:  # Ensure the user is logged in
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    # Handle GET request (Display the form with existing data)
-    if request.method == 'GET':
-        cursor.execute('SELECT * FROM responsibilities WHERE id = %s', (responsibility_id,))
-        responsibility = cursor.fetchone()
-        if not responsibility:
-            mesage ='Responsibility not found!'
-            return redirect(url_for('view_responsibilities'))
-        return render_template('edit_responsibility.html', responsibility=responsibility)
+        # Handle GET request (Display the form with existing data)
+        if request.method == 'GET':
+            cursor.execute('SELECT * FROM responsibilities WHERE id = %s', (responsibility_id,))
+            responsibility = cursor.fetchone()
+            if not responsibility:
+                flash("Responsibility not found!", "danger")
+                return redirect(url_for('responsibility', responsibility=responsibility))
+            return render_template('edit_responsibility.html', responsibility=responsibility)
 
-    # Handle POST request (Update the responsibility in the database)
-    if request.method == 'POST':
-        responsibility_name = request.form['responsibility']
-        responsibility_description = request.form['description']
-        responsibility_path = request.form['path']
+        # Handle POST request (Update the responsibility in the database)
+        if request.method == 'POST':
+            responsibility_name = request.form['responsibility']
+            responsibility_description = request.form['description']
+            responsibility_path = request.form['path']
 
-        if not responsibility_name or not responsibility_description or not responsibility_path:
-            mesage ='Please fill in all fields!'
-            return redirect(url_for('edit_responsibility', responsibility_id=responsibility_id))
+            if not responsibility_name or not responsibility_description or not responsibility_path:
+                flash("Please fill in all fields!", "danger")
+                return redirect(url_for('edit_responsibility', responsibility_id=responsibility_id))
 
-        cursor.execute('UPDATE responsibilities SET name = %s, description = %s, path = %s WHERE id = %s',
-                       (responsibility_name, responsibility_description, responsibility_path, responsibility_id))
+            cursor.execute('UPDATE responsibilities SET name = %s, description = %s, path = %s WHERE id = %s',
+                        (responsibility_name, responsibility_description, responsibility_path, responsibility_id))
+            mysql.connection.commit()
+            cursor.close()
+            flash("Responsibility updated successfully!", "success")
+            return redirect(url_for('responsibility'))
+    return redirect(url_for('login'))
+
+
+
+@app.route('/responsibility_delete/<int:responsibility_id>', methods=['GET'])
+def responsibility_delete(responsibility_id):
+    
+    if 'loggedin' in session:  # Ensure the user is logged in
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        # First, delete entries from the roles_responsibilities table
+        cursor.execute("DELETE FROM roles_responsibilities WHERE responsibility_id = %s", (responsibility_id,))
+        cursor.execute("DELETE FROM responsibilities WHERE id = %s", (responsibility_id,))
         mysql.connection.commit()
-        cursor.close()
-        mesage ='Responsibility updated successfully!'
+        flash("Responsibility Deleted Sucessfully!", "danger")
         return redirect(url_for('responsibility'))
+    return redirect(url_for('login'))
 
 
 # Add Book Route
 @app.route('/add_book', methods=['GET', 'POST'])
 def add_book():
-    mesage = ''
+    
     if 'loggedin' in session:  # Ensure the user is logged in
-        if request.method == 'POST':
+        if request.method == 'POST' and 'title' in request.form and 'author' in request.form and 'quantity' in request.form:
             title = request.form['title']
             author = request.form['author']
             rack = request.form['rack']
@@ -551,11 +584,13 @@ def add_book():
 
             # Commit the update
             mysql.connection.commit()
-            mesage = 'Book added successfully!'
-            return render_template('add_book.html', mesage=mesage)
+            flash("Book added successfully!", "success")
+            return render_template('add_book.html')
+        elif request.method == 'POST':
+            flash("Please fill out this form!", "danger")
+            return render_template('add_book.html')
         else:
-            mesage = 'Please fill out this form!'
-            return render_template('add_book.html', mesage=mesage)
+            return render_template('add_book.html')
     return redirect(url_for('login'))
 
 
@@ -577,6 +612,7 @@ def books():
         return render_template('books.html', books=books)
     return redirect(url_for('login'))
 
+
 @app.route('/books', methods=['GET'])
 def view_books():
     if 'loggedin' in session:
@@ -586,10 +622,12 @@ def view_books():
         return render_template('view_books.html', books=books)
     return redirect(url_for('login'))
 
+
+
 # Edit Book Route
 @app.route('/edit_book/<int:id>', methods=['GET', 'POST'])
 def edit_book(id):
-    mesage = ''
+    
     if 'loggedin' in session:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         if request.method == 'POST':
@@ -602,14 +640,27 @@ def edit_book(id):
             cursor.execute('UPDATE add_book SET title = %s, author = %s, rack = %s, quantity = %s WHERE id = %s',
                            (title, author, rack, quantity, id))
             mysql.connection.commit()
-            mesage = 'Book updated successfully!'
-            return redirect(url_for('view_books', mesage=mesage))
+            flash("Book updated successfully!", "success")
+            return redirect(url_for('view_books'))
 
         # Fetch the book details for the given ID
         cursor.execute('SELECT * FROM add_book WHERE id = %s', (id,))
         book = cursor.fetchone()
 
         return render_template('edit_book.html', book=book)
+    return redirect(url_for('login'))
+
+
+@app.route('/delete_book/<int:id>', methods=['GET'])
+def delete_book(id):
+    
+    if 'loggedin' in session:  # Ensure the user is logged in
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        # delete entries from the add_book table
+        cursor.execute("DELETE FROM add_book WHERE id = %s", (id,))
+        mysql.connection.commit()
+        flash("book Deleted Sucessfully!", "danger")
+        return redirect(url_for('books'))
     return redirect(url_for('login'))
 
 @app.route('/return_book', methods=['GET', 'POST'])
@@ -689,11 +740,12 @@ def issued_books():
     if 'loggedin' in session:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('''
-            SELECT bi.id, b.title, bi.issue_date 
+            SELECT u.first_name, bi.id, b.title, bi.issue_date 
             FROM book_issues bi 
-            JOIN add_book b ON bi.book_id = b.id 
-            WHERE bi.user_id = %s AND bi.return_date IS NULL
-        ''', (session['user_id'],))
+            JOIN add_book b ON bi.book_id = b.id
+            JOIN user_table u ON bi.user_id = u.id 
+            WHERE bi.return_date IS NULL
+        ''')
         issued_books = cursor.fetchall()
         return render_template('issued_books.html', issued_books=issued_books)
     return redirect(url_for('login'))

@@ -1,24 +1,27 @@
-{% extends 'layout.html' %}
-{% block content %}
-<div class="container">
-    <h2>Return Book</h2>
-    {% if mesage %}
-        <div class="alert alert-info">{{ mesage }}</div>
-    {% endif %}
-    <form method="POST" action="{{ url_for('return_book') }}">
-        <div class="form-group">
-            <label for="issue_id">Select Book to Return:</label>
-            <select name="issue_id" id="issue_id" class="form-control" required>
-                {% for book in issued_books %}
-                    <option value="{{ book.id }}">{{ book.title }} - Issued to {{ book.first_name }} {{ book.last_name }} on {{ book.issue_date }}</option>
-                {% endfor %}
-            </select>
+{% include 'header.html' %}
+<body>
+    <div class="container-fluid" id="main">
+        {% include 'top_menus.html' %}
+        <div class="row row-offcanvas row-offcanvas-left">
+            {% include 'left_menus.html' %}
+            <div class="col-md-9 col-lg-10 main">
+                <h2>Return Book</h2>
+                <form method="POST" action="{{ url_for('return_book') }}">
+                    <div class="form-group">
+                        <label for="issue_id">Select Book to Return:</label>
+                        <select name="issue_id" id="issue_id" class="form-control" required>
+                            {% for book in issued_books %}
+                                <option value="{{ book.id }}">{{ book.title }} - Issued to {{ book.first_name }} {{ book.last_name }} on {{ book.issue_date }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="return_date">Return Date:</label>
+                        <input type="date" name="return_date" id="return_date" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Return Book</button>
+                </form>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="return_date">Return Date:</label>
-            <input type="date" name="return_date" id="return_date" class="form-control" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Return Book</button>
-    </form>
-</div>
-{% endblock %}
+    </div>
+</body>

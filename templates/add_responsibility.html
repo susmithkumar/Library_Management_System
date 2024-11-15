@@ -7,9 +7,6 @@
         <div class="col-md-9 col-lg-10 main">
             <h2>Add New Responsibility</h2>
             <form action="{{ url_for('add_responsibility') }}" method="post">
-                {% if mesage %}
-                    <div class="alert alert-warning">{{ mesage }}</div>
-                {% endif %}
                 <div class="form-group">
                     <label for="responsibility">Responsibility Name:</label>
                     <input type="text" class="form-control" id="responsibility" name="responsibility" placeholder="Enter responsibility name" required>
