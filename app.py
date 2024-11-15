@@ -19,7 +19,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 
 load_dotenv()
 
-openai.api_key = ""
+openai.api_key = " "
 
 # Set the upload folder
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -479,7 +479,8 @@ def responsibility():
 def edit_responsibility(responsibility_id):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    # Handle GET request (Display the form with existing data)
+    # Handle GET request (Display the form wi
+    # th existing data)
     if request.method == 'GET':
         cursor.execute('SELECT * FROM responsibilities WHERE id = %s', (responsibility_id,))
         responsibility = cursor.fetchone()
