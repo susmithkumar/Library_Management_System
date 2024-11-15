@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_mysqldb import MySQL
 import MySQLdb.cursors  # Needed for working with MySQL cursors
 import re, bcrypt, requests, random, time, os
-from openai import OpenAI
+import openai 
 from sentence_transformers import SentenceTransformer
 from sqlalchemy import create_engine, text
 import json
@@ -19,7 +19,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 
 load_dotenv()
 
-OpenAI.api_key = ""
+openai.api_key = ""
 
 # Set the upload folder
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -137,7 +137,7 @@ def search_books():
         search_term = request.form.get('search_term')
         if search_term:
             # Generate embedding for the search term
-            query_embedding = OpenAI.Embedding.create(input=search_term, model="text-embedding-ada-002")['data'][0]['embedding']
+            query_embedding = openai.Embedding.create(input=search_term, model="text-embedding-ada-002")['data'][0]['embedding']
 
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
@@ -563,7 +563,7 @@ def generate_embeddings(text_input):
     if not isinstance(text_input, str):
         raise ValueError("Expected a string for text_input, got a non-string type.")
 
-    response = OpenAI.Embedding.create(input=text_input, model="text-embedding-ada-002")
+    response = openai.Embedding.create(input=text_input, model="text-embedding-ada-002")
     return response['data'][0]['embedding']
 
 
@@ -792,7 +792,7 @@ def generate_book_summary(title, author, description=""):
 
     try:
         # Use the updated ChatCompletion API
-        response = OpenAI.ChatCompletion.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",  # or "gpt-4" if you have access
             messages=messages,
             max_tokens=150,
