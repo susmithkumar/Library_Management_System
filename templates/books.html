@@ -31,6 +31,7 @@
                             <td>{{ book.isbn }}</td>
                             <td>
                                 <a href="{{ url_for('edit_book', id=book.id) }}" class="btn btn-warning btn-sm">Edit</a>
+                                <a href="{{ url_for('delete_book', id=book.id) }}" class="btn btn-danger btn-sm"> Delete</a>
                             </td>
                         </tr>
                     {% endfor %}

@@ -9,7 +9,6 @@
 
             <!-- Add Responsibility Button -->
             <a href="{{ url_for('add_responsibility') }}" class="btn btn-primary mb-3">Add New Responsibility</a>
-
             {% if responsibility %}
                 <table class="table table-bordered">
                     <thead>
@@ -30,6 +29,9 @@
                             <td>{{ responsibilities.path }}</td>
                             <td>
                                 <a href="{{ url_for('edit_responsibility', responsibility_id=responsibilities.id) }}" class="btn btn-info btn-sm">Edit</a>
+                                <a href="{{ url_for('responsibility_delete', responsibility_id=responsibilities.id) }}" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </a>
                             </td>
                         </tr>
                     {% endfor %}
