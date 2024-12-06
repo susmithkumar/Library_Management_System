@@ -48,6 +48,7 @@ jobs:
       run: |
         pytest tests/test1_app.py
         pytest tests
+        pytest run_tests.py
 
   deploy:
     needs: test
