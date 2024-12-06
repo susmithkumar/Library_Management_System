@@ -14,7 +14,8 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 model = SentenceTransformer('all-MiniLM-L6-v2')
-engine = create_engine("mysql+pymysql://root:W7301%40jqir%23@localhost/library_management_system")
+password = os.getenv("PA")
+engine = create_engine("mysql+pymysql://root:{password}@localhost/library_management_system")
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 
 load_dotenv()
