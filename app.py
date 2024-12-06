@@ -32,18 +32,18 @@ app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2 MB limit
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 ##new changes by vinod
 # Configure MySQL database connection
-app.config['MYSQL_HOST'] = 'host.docker.internal'  # Use this for Docker on Windows/Mac
+#app.config['MYSQL_HOST'] = 'host.docker.internal'  # Use this for Docker on Windows/Mac
 # Alternatively, if you're using a specific IP address, replace it with that
 # app.config['MYSQL_HOST'] = 'YOUR_HOST_IP_ADDRESS'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'W7301@jqir#'
-app.config['MYSQL_DB'] = 'library_management_system'
-##end 12/6
-# Configure MySQL database connection
-#app.config['MYSQL_HOST'] = '127.0.0.1'
 #app.config['MYSQL_USER'] = 'root'
 #app.config['MYSQL_PASSWORD'] = 'W7301@jqir#'
 #app.config['MYSQL_DB'] = 'library_management_system'
+##end 12/6
+# Configure MySQL database connection
+app.config['MYSQL_HOST'] = '127.0.0.1'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'W7301@jqir#'
+app.config['MYSQL_DB'] = 'library_management_system'
 # Initialize MySQL
 mysql = MySQL(app)
 
