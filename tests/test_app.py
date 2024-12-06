@@ -1,5 +1,6 @@
 import unittest
-from app import app, mysql
+from app import app
+from app import mysql
 import json
 
 class FlaskAppTests(unittest.TestCase):
