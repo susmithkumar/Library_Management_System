@@ -21,6 +21,7 @@ load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+
 # Set the upload folder
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 

@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS book_issues (
         is_returned TINYINT(1),
         FOREIGN KEY (user_id) REFERENCES user_table(id),
         FOREIGN KEY (book_id) REFERENCES add_book(id)
-)
+);
 
 INSERT IGNORE INTO roles (id, name, description) VALUES 
 (1, 'Admin', 'have all accesses'),

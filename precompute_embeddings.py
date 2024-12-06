@@ -4,10 +4,10 @@ from sqlalchemy import create_engine ,text
 import json
 
 # Ensure openai.api_key is set
-openai.api_key = " "
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-
-# Connect to the database
+password = os.getenv("PA")
+# Connect to the databas
 engine = create_engine("mysql+mysqlconnector://root:W7301%40jqir%23@127.0.0.1:3306/library_management_system")
 
 def generate_embeddings(text_input):
