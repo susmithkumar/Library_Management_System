@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 model = SentenceTransformer('all-MiniLM-L6-v2')
-engine = create_engine("mysql+pymysql://root:PASSWORD@localhost/library_management_system")
+engine = create_engine("mysql+pymysql://root:W7301%40jqir%23@localhost/library_management_system")
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 
 load_dotenv()
@@ -34,7 +34,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # Configure MySQL database connection
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'PASSWORD'
+app.config['MYSQL_PASSWORD'] = os.getenv("PASSWORD")
 app.config['MYSQL_DB'] = 'library_management_system'
 # Initialize MySQL
 mysql = MySQL(app)
