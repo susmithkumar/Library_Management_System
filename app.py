@@ -40,9 +40,9 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 #app.config['MYSQL_DB'] = 'library_management_system'
 ##end 12/6
 # Configure MySQL database connection
-app.config['MYSQL_HOST'] = '127.0.0.1'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'W7301@jqir#'
+app.config['MYSQL_HOST'] = os.getenv("DB_HOST")
+app.config['MYSQL_USER'] = os.getenv("DB_USERNAME")
+app.config['MYSQL_PASSWORD'] = os.getenv("DB_PASSWORD")
 app.config['MYSQL_DB'] = 'library_management_system'
 # Initialize MySQL
 mysql = MySQL(app)

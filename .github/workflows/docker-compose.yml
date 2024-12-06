@@ -1,0 +1,58 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [cdsetup]
+  pull_request:
+    branches: [cdsetup]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    env: # Add environment variables here
+      DB_HOST: host.docker.internal
+      DB_USERNAME: root
+      DB_PASSWORD: W7301@jqir#
+      DB_NAME: library_management_system
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests
+      run: pytest tests/
+
+  docker-build-and-push:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    env: # Add environment variables here as well if needed for Docker build
+      DOCKER_USERNAME: your_dockerhub_username
+      DOCKER_PASSWORD: your_dockerhub_password
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: dhonirohit048@gmail.com
+        password: dhoni6998@
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: yourdockerhubusername/library-management-system:latest
