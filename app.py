@@ -314,6 +314,7 @@ def view_user():
         user = cursor.fetchone()
         return render_template("view_user.html", user = user)
     return redirect(url_for('login'))
+#view usrs details 
 
 
 @app.route('/add_role', methods=['GET', 'POST'])
@@ -434,7 +435,7 @@ def role_delete(role_id):
         flash("Role Deleted updated successfully!", "danger")
         return redirect(url_for('roles'))
     return redirect(url_for('login'))
-
+#role addition 
 
 @app.route('/add_responsibility', methods=['GET', 'POST'])
 def add_responsibility():
