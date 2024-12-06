@@ -7,7 +7,7 @@ import json
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 password = os.getenv('PASSWORD')
-# Connect to the database
+# Connect to the databas
 engine = create_engine("mysql+mysqlconnector://root:{password}@127.0.0.1:3306/library_management_system")
 
 def generate_embeddings(text_input):
