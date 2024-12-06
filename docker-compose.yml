@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5002:5000"
+    depends_on:
+      - db
+    environment:
+      - FLASK_ENV=development
+    networks:
+      - mynetwork
+
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: W7301@jqir#
+      MYSQL_DATABASE: library_management_system
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
