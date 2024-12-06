@@ -143,7 +143,7 @@ wcwidth==0.2.13
 Werkzeug==2.0.3
 wheel==0.45.0
 WTForms==3.2.1
-=======
+
 Flask-Testing==0.8.1
 beautifulsoup4==4.10.0
 Werkzeug==2.0.3
