@@ -4,11 +4,11 @@ from sqlalchemy import create_engine ,text
 import json
 
 # Ensure openai.api_key is set
-openai.api_key = OPENAI_API_KEY
+openai.api_key = ${{ secrets.OPENAI_API_KEY }}
 
 
 # Connect to the database
-engine = create_engine("mysql+mysqlconnector://root:PASSWORD@127.0.0.1:3306/library_management_system")
+engine = create_engine("mysql+mysqlconnector://root:${{ secrets.PASSWORD }}@127.0.0.1:3306/library_management_system")
 
 def generate_embeddings(text_input):
     if not isinstance(text_input, str):
