@@ -19,7 +19,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 
 load_dotenv()
 
-openai.api_key = OPENAI_API_KEY
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 # Set the upload folder
