@@ -1,24 +1,26 @@
-version: '3.8'
-
+version: '3'
 services:
   web:
     build: .
     ports:
-      - "5002:5000"
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_USERNAME=root
+      - DB_PASSWORD=W7301@jqir#
+      - DB_NAME=library_management_system
     depends_on:
       - db
-    environment:
-      - FLASK_ENV=development
-    networks:
-      - mynetwork
 
   db:
-    image: mysql:latest
+    image: mysql:5.7
     environment:
       MYSQL_ROOT_PASSWORD: W7301@jqir#
       MYSQL_DATABASE: library_management_system
-    networks:
-      - mynetwork
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
 
-networks:
-  mynetwork:
+volumes:
+  mysql_data:

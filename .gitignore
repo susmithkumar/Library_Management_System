@@ -3,3 +3,4 @@ __pycache__/
 frontend_testcases/__pycache__/
 library managament system.iml
 myenv/
+.env
