@@ -6,13 +6,17 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libmariadb-dev-compat \
-    libmariadb-dev \
+    default-libmysqlclient-dev \
+    pkg-config \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
 COPY requirements.txt .
+
+ENV PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig 
+
+RUN pip install --upgrade pip setuptools
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
