@@ -34,6 +34,10 @@ jobs:
         grep -v "pywin32" requirements.txt > requirements-linux.txt
         pip install -r requirements-linux.txt
 
+    - name: Set up database schema
+      run: |
+        mysql -h127.0.0.1 -uroot -pW7301@jqir# library_management_system < schema.sql
+
     - name: Run tests
       env:
         MYSQL_HOST: 127.0.0.1
