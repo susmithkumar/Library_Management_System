@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [cdsetup]
+    branches: [main]
   pull_request:
-    branches: [cdsetup]
+    branches: [main]
 
 jobs:
   build-and-test:
@@ -14,7 +14,7 @@ jobs:
       mysql:
         image: mysql:5.7
         env:
-          MYSQL_ROOT_PASSWORD: W7301@jqir#
+          MYSQL_ROOT_PASSWORD: ${{ secrets.PASSWORD }}
           MYSQL_DATABASE: library_management_system
         ports:
           - 3306:3306
@@ -36,13 +36,13 @@ jobs:
 
     - name: Set up database schema
       run: |
-        mysql -h127.0.0.1 -uroot -pW7301@jqir# library_management_system < schema.sql
+        mysql -h127.0.0.1 -uroot -p${{ secrets.DB_PASSWORD }} library_management_system < schema.sql
 
     - name: Run tests
       env:
         MYSQL_HOST: 127.0.0.1
         MYSQL_USER: root
-        MYSQL_PASSWORD: W7301@jqir#
+        MYSQL_PASSWORD: ${{ secrets.PASSWORD }}
         MYSQL_DB: library_management_system
       run: pytest tests/
 
@@ -57,12 +57,12 @@ jobs:
     - name: Login to DockerHub
       uses: docker/login-action@v1
       with:
-        username: dhonirohit048@gmail.com
-        password: dhoni6998@
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
       with:
         context: .
         push: true
-        tags: bhanurohit048/library-management-system:latest
+        tags: OwnUserName/library-management-system:latest
