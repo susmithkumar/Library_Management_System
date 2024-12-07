@@ -36,7 +36,7 @@ jobs:
 
     - name: Set up database schema
       run: |
-        mysql -h127.0.0.1 -uroot -p${{ secrets.DB_PASSWORD }} library_management_system < schema.sql
+        mysql -h127.0.0.1 -uroot -p${{ secrets.PASSWORD }} library_management_system < schema.sql
 
     - name: Run tests
       env:
