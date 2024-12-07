@@ -14,7 +14,7 @@ jobs:
       mysql:
         image: mysql:5.7
         env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.PASSWORD }}
+          MYSQL_ROOT_PASSWORD: W7301@jqir#
           MYSQL_DATABASE: library_management_system
         ports:
           - 3306:3306
@@ -35,7 +35,7 @@ jobs:
     
     - name: Set up database schema
       run: |
-        mysql -h127.0.0.1 -uroot -p${{ secrets.DB_PASSWORD }} library_management_system < schema.sql
+        mysql -h127.0.0.1 -uroot -pW7301@jqir# library_management_system < schema.sql
 
 
     
@@ -43,7 +43,7 @@ jobs:
       env:
         MYSQL_HOST: 127.0.0.1
         MYSQL_USER: root
-        MYSQL_PASSWORD: ${{ secrets.PASSWORD }}
+        MYSQL_PASSWORD: W7301@jqir#
         MYSQL_DB: library_management_system
       run: |
         pytest tests/test1_app.py
