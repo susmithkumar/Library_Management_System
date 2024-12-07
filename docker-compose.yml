@@ -3,12 +3,18 @@ services:
     image: mysql:latest
     container_name: mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: W7301@jqir#
       MYSQL_DATABASE: library_management_system
-      MYSQL_USER: user
+      MYSQL_USER: root
       MYSQL_PASSWORD: W7301@jqir#
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - mysql_data:/var/lib/mysql
 volumes:
