@@ -64,6 +64,6 @@ jobs:
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
       run: |
-        docker build -u $DOCKER_USERNAME/library-management-system:latest . 
+        docker build -t $DOCKER_USERNAME/library-management-system:latest . 
         docker push $DOCKER_USERNAME/library-management-system:latest
       
