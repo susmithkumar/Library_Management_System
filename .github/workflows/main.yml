@@ -26,7 +26,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.12
+        python-version: 3.9
 
     - name: Install dependencies
       run: |
@@ -36,10 +36,10 @@ jobs:
 
     - name: Run tests
       env:
-        DB_HOST: 127.0.0.1
-        DB_USERNAME: root
-        DB_PASSWORD: W7301@jqir#
-        DB_NAME: library_management_system
+        MYSQL_HOST: 127.0.0.1
+        MYSQL_USER: root
+        MYSQL_PASSWORD: W7301@jqir#
+        MYSQL_DB: library_management_system
       run: pytest tests/
 
   docker-build-and-push:
