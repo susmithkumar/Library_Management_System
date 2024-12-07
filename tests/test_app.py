@@ -6,6 +6,7 @@ import json
 class FlaskAppTests(unittest.TestCase):
 
     def setUp(self):
+        #Setting up.
         self.app = app.test_client()
         self.app.testing = True 
 
