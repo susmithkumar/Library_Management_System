@@ -1,27 +1,49 @@
 {% include 'header.html' %}
 <body>
-    <div class="container-fluid" id="main">
-        {% include 'top_menus.html' %}
-        <div class="row row-offcanvas row-offcanvas-left">
-            {% include 'left_menus.html' %}
-            <div class="col-md-9 col-lg-10 main">
-                <h2>Return Book</h2>
-                <form method="POST" action="{{ url_for('return_book') }}">
-                    <div class="form-group">
-                        <label for="issue_id">Select Book to Return:</label>
-                        <select name="issue_id" id="issue_id" class="form-control" required>
-                            {% for book in issued_books %}
-                                <option value="{{ book.id }}">{{ book.title }} - Issued to {{ book.first_name }} {{ book.last_name }} on {{ book.issue_date }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="return_date">Return Date:</label>
-                        <input type="date" name="return_date" id="return_date" class="form-control" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Return Book</button>
-                </form>
-            </div>
+<div class="container-fluid" id="main">
+    {% include 'top_menus.html' %}
+    <div class="row row-offcanvas row-offcanvas-left">
+        {% include 'left_menus.html' %}
+        <div class="col-md-9 col-lg-10 main">
+
+            <form method="GET" action="{{ url_for('search_issued_books', id=session['user_id']) }}" class="mb-3">
+                <div class="input-group">
+                    <input type="text" name="search_query" class="form-control" placeholder="Search issued books by title or name" aria-label="Search issued books">
+                    <button type="submit" class="btn btn-secondary">Search</button>
+                </div>
+            </form>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Book Name</th>
+                        <th>Issue Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for book in issued_books %}
+                        <tr>
+                            <td>{{ book.first_name }} {{ book.last_name }}</td>
+                            <td>{{ book.title }}</td>
+                            <td>{{ book.issue_date }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('return_book', issue_id=book.bnumber) }}">
+                                    <div class="form-group">
+                                        <label for="return_date">Return Date:</label>
+                                        <input type="hidden" name="bnumber" id="bnumber" class="form-control" value={{book.bnumber}}>
+                                        <input type="date" name="return_date" id="return_date" class="form-control" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Return Book</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 </body>
+</html>

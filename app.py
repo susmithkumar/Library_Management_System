@@ -673,38 +673,59 @@ def delete_book(id):
         return redirect(url_for('books'))
     return redirect(url_for('login'))
 
-@app.route('/return_book', methods=['GET', 'POST'])
+@app.route('/return_book', methods=['GET','POST'])
 def return_book():
     if 'loggedin' in session:
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         if request.method == 'POST':
-            issue_id = request.form['issue_id']
-            return_date = request.form['return_date']
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             
-            # Mark the book as returned
-            cursor.execute('UPDATE book_issues SET is_returned = TRUE, return_date = %s WHERE id = %s',
-                           (return_date, issue_id))
+            # Get the return date from the form
+            return_date = request.form.get('return_date')
+            issue_id = request.form.get('bnumber')
+            # Mark the book as returned and update return_date
+            query1 = '''
+                UPDATE book_issues 
+                SET is_returned = TRUE, return_date = %s 
+                WHERE id = %s
+            '''
+            cursor.execute(query1, (return_date, issue_id))
+            
+            # Debugging: Print the first query
+            print("Query 1 executed successfully.")
+            
             # Increase the book quantity
-            cursor.execute('''
+            query2 = '''
                 UPDATE add_book 
                 SET quantity = quantity + 1 
                 WHERE id = (SELECT book_id FROM book_issues WHERE id = %s)
-            ''', (issue_id,))
+            '''
+            cursor.execute(query2, (issue_id,))
+            
+            # Debugging: Print the second query
+            print("Query 2 executed successfully.")
+            
+            # Commit the transaction
             mysql.connection.commit()
             flash('Book returned successfully!')
-            return redirect(url_for('return_book'))
-        
-        # Fetch issued books that haven't been returned
-        cursor.execute('''
-            SELECT bi.id, u.first_name, u.last_name, b.title, bi.issue_date 
-            FROM book_issues bi 
-            JOIN user_table u ON bi.user_id = u.id 
-            JOIN add_book b ON bi.book_id = b.id 
-            WHERE bi.is_returned = FALSE
-        ''')
-        issued_books = cursor.fetchall()
-        return render_template('return_book.html', issued_books=issued_books)
+            return redirect(url_for('search_issued_books', id=session['user_id']))
+        return render_template('return_book.html')
     return redirect(url_for('login'))
+
+
+@app.route('/search_issued_books/<int:id>')
+def search_issued_books(id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    # Fetch issued books that haven't been returned
+    cursor.execute('''
+        SELECT bi.id as bnumber, u.first_name, u.last_name, b.title, bi.issue_date 
+        FROM book_issues bi 
+        JOIN user_table u ON bi.user_id = u.id 
+        JOIN add_book b ON bi.book_id = b.id 
+        WHERE bi.is_returned = FALSE AND bi.user_id = %s
+    ''', (id,))
+        
+    issued_books = cursor.fetchall()
+    return render_template('return_book.html', issued_books=issued_books)
 
 @app.route('/issue_book', methods=['GET', 'POST'])
 def issue_book():
