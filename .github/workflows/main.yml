@@ -61,9 +61,8 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Build and push Docker image
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
-      run: |
-        docker build -t $DOCKER_USERNAME/library-management-system:latest . 
-        docker push $DOCKER_USERNAME/library-management-system:latest
-      
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME}}/library-management-system:latest
