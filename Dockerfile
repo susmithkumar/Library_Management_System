@@ -54,12 +54,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the project files into the container
 COPY . .
 
-# Set default environment variables
-ENV DB_HOST=host.docker.internal
-ENV DB_USERNAME=root
-ENV DB_PASSWORD=W7301@jqir#
-ENV DB_NAME=library_management_system
-
 # Expose the port the app runs on
 EXPOSE 5000
 
